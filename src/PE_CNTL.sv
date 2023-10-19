@@ -4,7 +4,7 @@ module PE_CNTL
 //-------------------Input-------------------------//
     input clk,
     input rst,
-    filter_Parameter[$clog2(`num_of_Conv_Layer):0] filter_Parameter_TB,
+    filter_Parameter filter_Parameter_TB,
     input_activation_Parameter input_activation_Parameter_PPU,
 
     output Req_Stream Req_Stream_PE;
