@@ -1,0 +1,9 @@
+All parameters are from Alexnet.
+Assuamption:
+Wt, Ht will be set to each PE manually.
+Boundary of k' will be calculated in Testbench as input for convolutional layers (do not know FC). K/Kc-1
+//-----------------------------------------------Dram------------------------------------------------------//
+Simple model for Dram, 50 GB/s for SCNN in paper. 
+have not decided if add FIFO between Dram and PE. Because clock_frequency of Dram is different with PE. 
+Otherwise：
+Assume clock_frequency is 1 GHZ (changeable). # of data=50*8/1/16=25 will be fetched in one clock cycle .
