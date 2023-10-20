@@ -6,8 +6,7 @@ module PE_CNTL
     input rst,
     PPU_to_CNTL PPU_to_CNTL_in,
     Conv_filter_Parameter Conv_filter_Parameter_TB,
-    input_activation_Parameter input_activation_Parameter_PPU,
-    Response_Stream_PE  Response_Stream_PE_in,
+    
     input Stream_filter_finish,//From Top, Response_Stream_Complete packet
     input Stream_input_finish_PE,
 
