@@ -6,7 +6,7 @@ module PE_CNTL
     input rst,
     PPU_to_CNTL PPU_to_CNTL_in,
     Conv_filter_Parameter Conv_filter_Parameter_TB,
-    
+
     input Stream_filter_finish,//From Top, Response_Stream_Complete packet
     input Stream_input_finish_PE,
 
@@ -24,11 +24,12 @@ logic[$clog2(`max_num_K)-1:0] Current_k, nx_k;
 logic[$clog2(`max_num_channel)-1:0] Current_c, nx_c;
 logic[$clog2(`max_num_Wt*`max_num_Ht/`I)-1:0] Current_a, nx_a;
 logic[$clog2(`Kc*max_num_R*max_num_S/`F):0] Current_w, nx_w;
-logic Partial_w, Partial_a, Partial_c, Partial_k;
 logic[$clog2(`max_num_K)-1:0] reg_k_Conv_Boundary;
 logic[$clog2(`Kc*max_num_R*max_num_S/`F)-1:0] reg_w_Conv_Boundary;
 logic[$clog2(`max_num_channel)-1:0] reg_c_Conv_Boundary;
 logic[$clog2(`max_num_Wt*max_num_Ht/`I)-1:0] reg_a_Conv_Boundary;
+
+logic Partial_w, Partial_a, Partial_c, Partial_k;
 always_ff@(posedge clk)begin
     if(rst)begin
         state<=#1 'd0;
@@ -48,7 +49,7 @@ always_ff@(posedge clk)begin
         reg_k_Conv_Boundary<=#1 Conv_filter_Parameter_TB.k_Conv_Boundary;
         reg_w_Conv_Boundary<=#1 Conv_filter_Parameter_TB.w_Conv_Boundary;
         reg_c_Conv_Boundary<=#1 Conv_filter_Parameter_TB.c_Conv_Boundary;
-        reg_a_Conv_Boundary<=#1 Current_data_flow? PPU_to_CNTL_in.num_of_compressed_data : Conv_filter_Parameter_TB.a_Conv_Boundary;
+        reg_a_Conv_Boundary<=#1 PPU_to_CNTL_in.data_flow_PPU? PPU_to_CNTL_in.num_of_compressed_data : Conv_filter_Parameter_TB.a_Conv_Boundary;
     end
 end
 always_comb begin
