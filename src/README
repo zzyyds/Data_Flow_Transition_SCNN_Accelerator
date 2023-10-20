@@ -1,7 +1,8 @@
 All parameters are from Alexnet.
 Assuamption:
-
-Boundary of k' will be calculated in Testbench as input for convolutional layers (do not know FC). K/Kc-1
+Wt, Ht will be set to each PE manually.// just for first Layer
+boundary of k',c,a(dense flow is needed),w will be calculated in Testbench as input for convolutional layers (do not know FC).
+For boundary of a in sparse data flow, will need number of data in compressed unit.
 //-----------------------------------------------Dram------------------------------------------------------//
 Simple model for Dram, 50 GB/s for SCNN in paper. 
 have not decided if add FIFO between Dram and PE. Because clock_frequency of Dram is different with PE. 
