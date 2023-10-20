@@ -3,6 +3,13 @@ Assuamption:
 Wt, Ht will be set to each PE manually.// just for first Layer
 boundary of k',c,a(dense flow is needed),w will be calculated in Testbench as input for convolutional layers (do not know FC).
 For boundary of a in sparse data flow, will need number of data in compressed unit.
+Wt and Ht are 4x to make the dataflow more easy.
+//----------------------------------------------PPU--------------------------------------------------------//
+conv_layer:
+Flow: Accumulator buffer drain data to RELU module, maxpool
+PPU_to_CNTL_in.data_flow_PPU is 0 or 1 maybe. depend on the sprsity of input.
+After compressing the input or weight, make sure the totoal number of them is 4x(Fx or Ix) to make the dataflow more easy. padding zeros if it is necessary.
+
 //-----------------------------------------------Dram------------------------------------------------------//
 Simple model for Dram, 50 GB/s for SCNN in paper. 
 have not decided if add FIFO between Dram and PE. Because clock_frequency of Dram is different with PE. 

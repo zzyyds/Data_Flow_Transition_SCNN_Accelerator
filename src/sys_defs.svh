@@ -27,6 +27,7 @@ typedef struct packed {
     logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`Kc*max_num_R*max_num_S/`F)-1:0] w_Conv_Boundary;
     logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_num_channel)-1:0] c_Conv_Boundary;
     logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_num_Wt*max_num_Ht/`I)-1:0] a_Conv_Boundary;
+    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_size_output)-1:0] num_of_compressed_weight;
 } Conv_filter_Parameter;
 typedef struct packed {
     logic Req_Stream_filter_valid;
