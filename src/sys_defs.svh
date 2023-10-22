@@ -19,7 +19,7 @@
 
 
 typedef struct packed {
-   logic data_flow_PPU; //from ppu to decide which data flow is needed, 0 for dense data flow, 1 for sparse data flow
+   logic[`max_num_channel-1:0] data_flow_PPU; //from ppu to decide which data flow is needed, 0 for dense data flow, 1 for sparse data flow
    logic[$clog2(`max_size_output)-1:0] num_of_compressed_data;//number of data after compression
 } PPU_to_CNTL;
 typedef struct packed {
