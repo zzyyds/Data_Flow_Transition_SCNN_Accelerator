@@ -16,7 +16,7 @@ each output feature map(as input in next layer, channel) need to be decided whet
 //----------------------------------------------PPU--------------------------------------------------------//
 conv_layer:
 Flow: MaxPool(Relu(x)) = Relu(MaxPool(x)). Accumulator buffer drain data (drain one ? column) to maxpool module(3x3 pooling, may need buffer because stride is 2, or pipelining),
-then RELU and evaulate number of zero, buffer to store whole feature map.
+then RELU and evaulate number of zero, buffer to store whole feature map. //wrong
 PPU_to_CNTL_in.data_flow_PPU is 0 or 1 maybe. depend on the sprsity of input.
 After compressing the input or weight, make sure the totoal number of them is 4x(Fx or Ix) to make the dataflow more easy. padding zeros if it is necessary.
 

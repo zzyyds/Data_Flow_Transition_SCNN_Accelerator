@@ -100,6 +100,7 @@ always_comb begin
             end
 
         Ex_Conv_Layer:
+            if(Current_Conv_Layer==0)begin
                 Partial_w=Current_w==reg_w_Conv_Boundary;
                 Partial_a=Current_a==reg_a_Conv_Boundary&&Partial_w;
                 Partial_c=Current_c==reg_c_Conv_Boundary&&Partial_a;
@@ -115,6 +116,16 @@ always_comb begin
                 else begin
                     nx_state=Ex_Conv_Layer;
                 end
+            end
+            else begin
+                if (PPU_to_CNTL_in.data_flow_PPU[Current_c]) //sparse data flow
+                    
+
+                else begin//dense data flow //dot production
+
+                end
+            end
+
             // end
             // else begin// dense data flow
             //     Partial_w=Current_w==reg_w_Conv_Boundary;
