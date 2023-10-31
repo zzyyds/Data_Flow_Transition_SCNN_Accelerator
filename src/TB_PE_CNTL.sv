@@ -55,24 +55,87 @@ initial begin
     @(negedge clk);
         Stream_input_finish_PE=1'b0;
          Stream_filter_finish=1'b1;
-    for (int i=0;i<1000;i++)begin
+    for (int i=0;i<100;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
     @(negedge clk);
     PPU_finish_en='d1;
     @(negedge clk);
+    PPU_finish_en='d0;
     @(negedge clk);
-    Stream_filter_finish=1'b1;
-    for (int i=0;i<1000;i++)begin
-        Stream_filter_finish=1'b0;
-        PPU_finish_en='d0;
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
     
     @(negedge clk);
-        Stream_filter_finish=1'b1;
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+        @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+      @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+      @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+      @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+          @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+              @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<100;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+        PPU_finish_en='d1;
+    @(negedge clk);
+        @(negedge clk);
+         Stream_filter_finish=1'b1;
     $finish;
 
 end

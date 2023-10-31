@@ -19,7 +19,7 @@ module PE_CNTL
 
 
 );
-parameter  N=4, IDLE='d0, Stream_Conv_Layer='d1, Ex_Conv_Layer='d2, Conv_Layer_PPU='d3;
+parameter  N=5, IDLE='d0, Stream_Conv_Layer='d1, Ex_Conv_Layer='d2, Conv_Layer_PPU='d3,Complete='d4;
 logic[$clog2(N)-1:0] state, nx_state;
 logic[$clog2(`num_of_Conv_Layer):0][`max_num_channel-1:0] reg_valid_channel;
 logic[$clog2(`num_of_Conv_Layer):0][`max_num_channel-1:0] reg_data_flow_channel; 
@@ -104,17 +104,17 @@ always_comb begin
                 nx_state=IDLE;
             end
         Stream_Conv_Layer:
-            if(Current_Conv_Layer==0)begin
-                Req_Stream_PE.Req_Stream_filter_valid='d1;
-                Req_Stream_PE.Req_Stream_filter_k=Current_k;
-                Req_Stream_PE.Req_Stream_Conv_Layer_num=Current_Conv_Layer;
-                Req_Stream_PE.Req_Stream_input_valid='d1;
-                if(Stream_filter_finish && reg_Stream_input_finish_PE)begin
-                    nx_state=Ex_Conv_Layer;
-                end
-                else begin
-                    nx_state=Stream_Conv_Layer;
-                end
+            if(Current_Conv_Layer==0&&Current_k==0)begin
+                    Req_Stream_PE.Req_Stream_filter_valid='d1;
+                    Req_Stream_PE.Req_Stream_filter_k=Current_k;
+                    Req_Stream_PE.Req_Stream_Conv_Layer_num=Current_Conv_Layer;
+                    Req_Stream_PE.Req_Stream_input_valid='d1;
+                    if(Stream_filter_finish && reg_Stream_input_finish_PE)begin
+                        nx_state=Ex_Conv_Layer;
+                    end
+                    else begin
+                        nx_state=Stream_Conv_Layer;
+                    end
             end
             else begin
                 Req_Stream_PE.Req_Stream_filter_valid='d1;
@@ -162,10 +162,10 @@ always_comb begin
                         nx_w='d0;
                         nx_state=Stream_Conv_Layer; //for nx k'
                 end
-                else if(reg_Partial_k && Current_Conv_Layer==`num_of_Conv_Layer-1'b1)begin //currently do not consider FC layer
+                else if(reg_Partial_k && Current_Conv_Layer==`num_of_Conv_Layer)begin //currently do not consider FC layer
                         Partial_k='d0;
                         nx_k='d0;
-                        nx_state=IDLE;
+                        nx_state=Complete;
                 end
                 else begin
                     if(reg_Partial_k)begin
@@ -182,7 +182,9 @@ always_comb begin
             end
             else begin
                 nx_state=Conv_Layer_PPU;
-            end    
+            end  
+        Complete: 
+            $display("Complete!");
 
         default: nx_state=IDLE;
 
