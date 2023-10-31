@@ -1,4 +1,4 @@
-`define num_of_PE 4
+`define num_of_PE 1
 `define max_num_K 384//k_Conv_Boundary
 `define max_num_filter 384
 `define max_num_channel 384
@@ -7,7 +7,7 @@
 `define max_size_output 55 // one dimension
 `define max_num_Wt 60 // for caculating a boundary
 `define max_num_Ht 60
-`define num_of_Conv_Layer 5
+`define num_of_Conv_Layer 1 -1
 `define Kc 4
 `define F 4
 `define I 4
@@ -24,14 +24,14 @@
 //    logic[$clog2(`max_size_output)-1:0] num_of_compressed_data;//number of data after compression
 // } PPU_to_CNTL;
 typedef struct packed {
-    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_num_K)-1:0] k_Conv_Boundary;//calculate in testbench
-    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`Kc*max_num_R*max_num_S/`F)-1:0] w_Conv_Boundary;
-    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_num_channel)-1:0] c_Conv_Boundary;
-    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_num_Wt*max_num_Ht/`I)-1:0] a_Conv_Boundary;
-    logic[$clog2(`num_of_Conv_Layer)-1:0][$clog2(`max_size_output)-1:0] num_of_compressed_weight;
+    logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_num_K)-1:0] k_Conv_Boundary;//calculate in testbench
+    logic[$clog2(`num_of_Conv_Layer):0][$clog2(`Kc*`max_num_R*`max_num_S/`F)-1:0] w_Conv_Boundary;
+    logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_num_channel)-1:0] c_Conv_Boundary;
+    logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_num_Wt*`max_num_Ht/`I)-1:0] a_Conv_Boundary;
+    logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_size_output)-1:0] num_of_compressed_weight;
 
-    logic[$clog2(`num_of_Conv_Layer)-1:0][`max_num_channel-1:0] valid_channel; //valid channel for each layer
-    logic[$clog2(`num_of_Conv_Layer)-1:0][`max_num_channel-1:0] data_flow_channel;//data flow type for each channel for each layer, 1 for sparse, 0 for dense flow
+    logic[$clog2(`num_of_Conv_Layer):0][`max_num_channel-1:0] valid_channel; //valid channel for each layer
+    logic[$clog2(`num_of_Conv_Layer):0][`max_num_channel-1:0] data_flow_channel;//data flow type for each channel for each layer, 1 for sparse, 0 for dense flow
 } Conv_filter_Parameter;
 typedef struct packed {
     logic Req_Stream_filter_valid;
