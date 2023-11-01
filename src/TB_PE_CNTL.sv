@@ -33,16 +33,21 @@ initial begin
     PPU_finish_en='d0;
     num_of_compressed_data='d0;
     Stream_input_finish_PE='d0;
-    Conv_filter_Parameter_TB.k_Conv_Boundary=8;
-    Conv_filter_Parameter_TB.w_Conv_Boundary=16;
-    Conv_filter_Parameter_TB.c_Conv_Boundary=3;
-    Conv_filter_Parameter_TB.a_Conv_Boundary=12;
-    Conv_filter_Parameter_TB.num_of_compressed_weight=4;
-    Conv_filter_Parameter_TB.valid_channel='d0;; //valid channel for each layer
-    Conv_filter_Parameter_TB.data_flow_channel='d0;
+    Conv_filter_Parameter_TB.k_Conv_Boundary[0]=8;
+    Conv_filter_Parameter_TB.w_Conv_Boundary[0]=16;
+    Conv_filter_Parameter_TB.c_Conv_Boundary[0]=3;
+    Conv_filter_Parameter_TB.a_Conv_Boundary[0]=12;
+    Conv_filter_Parameter_TB.num_of_compressed_weight[0]=4;
+    Conv_filter_Parameter_TB.valid_channel[0]='d0;; //valid channel for each layer
+    Conv_filter_Parameter_TB.data_flow_channel[0]='d0;
     Conv_filter_Parameter_TB.valid_channel[0]='b 111; //valid channel for each layer
-    Conv_filter_Parameter_TB.data_flow_channel[0]='b 111;
+    Conv_filter_Parameter_TB.data_flow_channel[0]='b 101;
 
+
+    Conv_filter_Parameter_TB.Size_of_R[0]='d5;
+    Conv_filter_Parameter_TB.Size_of_S[0]='d5;
+    Conv_filter_Parameter_TB.Size_of_W[0]='d21;
+    Conv_filter_Parameter_TB.Size_of_H[0]='d21;//8PE
     for(int i =0;i<`max_num_channel;i++)begin
         num_of_compressed_data[i]=16+4*i;
 
@@ -65,11 +70,10 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
-    
     @(negedge clk);
     PPU_finish_en='d1;
     @(negedge clk);
@@ -78,17 +82,7 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
-        @(negedge clk);
-        Stream_filter_finish=1'b0;
-    end
-      @(negedge clk);
-    PPU_finish_en='d1;
-    @(negedge clk);
-    PPU_finish_en='d0;
-    @(negedge clk);
-         Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
@@ -98,7 +92,7 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
@@ -108,7 +102,17 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+      @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+         Stream_filter_finish=1'b1;
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
@@ -118,7 +122,7 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
@@ -128,14 +132,26 @@ initial begin
     PPU_finish_en='d0;
     @(negedge clk);
          Stream_filter_finish=1'b1;
-    for (int i=0;i<100;i++)begin
+    for (int i=0;i<5000;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
     end
         PPU_finish_en='d1;
     @(negedge clk);
-        @(negedge clk);
+   @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
          Stream_filter_finish=1'b1;
+    for (int i=0;i<5000;i++)begin
+        @(negedge clk);
+        Stream_filter_finish=1'b0;
+    end
+              @(negedge clk);
+    PPU_finish_en='d1;
+    @(negedge clk);
+    PPU_finish_en='d0;
+    @(negedge clk);
+    
     $finish;
 
 end
