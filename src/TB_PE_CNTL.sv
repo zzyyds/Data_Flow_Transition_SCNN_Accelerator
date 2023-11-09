@@ -11,6 +11,7 @@ State_of_PE  PE_state_out;
 Weight_MUL_nx Weight_MUL_out;
 PPU_OARAM PPU_OARAM_in;
 Dram_IARAM Dram_IARAM_in;
+Dram_Weight Dram_Weight_in;
 PE_CNTL 
 #(.PE_num(PE_num))
 PE_CNTL_U0
@@ -35,6 +36,7 @@ I_OARAM I_OARAM_U0(
     .PE_state_out(PE_state_out),
     .PPU_OARAM_in(PPU_OARAM_in),
     .Dram_IARAM_in(Dram_IARAM_in),
+    .Dram_Weight_in(Dram_Weight_in),
 
     .IARAM_MUL_out(IARAM_MUL_out),
     .Weight_MUL_out(Weight_MUL_out)
@@ -51,6 +53,7 @@ initial begin
     PPU_finish_en='d0;
     num_of_compressed_data='d0;
     Stream_input_finish_PE='d0;
+    Dram_Weight_in='d0;
     Conv_filter_Parameter_TB.k_Conv_Boundary[0]=4;// k' if there is remainder for k/kc, need to care, but for alextnet, may not need to care 
     Conv_filter_Parameter_TB.w_Conv_Boundary[0]=6;
     Conv_filter_Parameter_TB.c_Conv_Boundary[0]=3;
@@ -74,7 +77,7 @@ initial begin
     end
     @(negedge clk);
     rst='d0;
-    @(posedge clk);
+    @(posedge clk);// state=1
     for(int i =0;i<`num_of_data_Dram;i++)begin
         Dram_IARAM_in.data[i]=i;
         Dram_IARAM_in.indices[i]=i+1;
@@ -87,10 +90,22 @@ initial begin
         Dram_IARAM_in.valid[i]=1'b1;
     end
     Stream_input_finish_PE='d1;
-   
-    @(negedge clk);
+     @(posedge clk);
+    for(int i =0;i<`num_of_data_Dram;i++)begin//Dram_Weight_in.dense=0
+        Dram_Weight_in.data[i]=i*2;
+        Dram_Weight_in.indices[i]=i+1;
+        Dram_Weight_in.valid[i]=1'b1;
+    end
+    @(posedge clk);
+    for(int i =0;i<`num_of_data_Dram;i++)begin//Dram_Weight_in.dense=0
+        Dram_Weight_in='d0;
+    end
+
+    @(posedge clk);
         Stream_input_finish_PE=1'b0;
+    
          Stream_filter_finish=1'b1;
+
     for (int i=0;i<100;i++)begin
         @(negedge clk);
         Stream_filter_finish=1'b0;
@@ -98,17 +113,22 @@ initial begin
     @(negedge clk);
     @(negedge clk);
     @(negedge clk);
-    @(negedge clk);
+    @(posedge clk);
         for(int i =0;i<`num_of_outputs_PPU;i++)begin
             PPU_OARAM_in.valid[i]=1'b1;
             PPU_OARAM_in.output_data[i]=i;
             PPU_OARAM_in.output_indices[i]=i;
         end
-    @(negedge clk);
+    @(posedge clk);
         for(int i =0;i<`num_of_outputs_PPU;i++)begin
             PPU_OARAM_in.valid[i]=1'b1;
             PPU_OARAM_in.output_data[i]=i+1;
             PPU_OARAM_in.output_indices[i]=i+1;
+        end
+        for(int i =0;i<`num_of_outputs_PPU;i++)begin
+            Dram_Weight_in.data[i]=i;
+            Dram_Weight_in.indices[i]=i+1;
+            Dram_Weight_in.valid[i]=1'b1;
         end
     @(negedge clk);
         PPU_OARAM_in<='d0;
@@ -208,7 +228,7 @@ initial begin
 //     @(negedge clk);
 //     PPU_finish_en='d0;
     @(negedge clk);
-    
+    @(negedge clk);
     $finish;
 
 end

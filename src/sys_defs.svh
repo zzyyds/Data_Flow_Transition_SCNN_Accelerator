@@ -1,5 +1,5 @@
 `define num_of_PE 1
-`define max_num_K 16//k_Conv_Boundary
+`define max_num_K 4//k_Conv_Boundary
 `define max_num_filter 384
 `define max_num_channel 384
 `define max_num_K_prime `max_num_K/`Kc
@@ -21,6 +21,7 @@
 `define clock_frequency 1       //unit GHZ
 `define num_data 50*8/`clock_frequency/16 //8(Bytes), 16 bits for one data
 `define max_compressed_data `max_size_H*`max_size_W
+`define max_compressed_weight `max_num_S*`max_num_R
 `define bits_of_indices 4
 `define num_of_outputs_PPU 8 //every cycle there are num_of_outputs_PPU data from Compress module
 `define num_of_data_Dram 16
@@ -29,12 +30,21 @@ typedef struct packed {
     logic[`num_of_data_Dram-1:0][15:0] data;
     logic[`num_of_data_Dram-1:0][`bits_of_indices-1:0] indices;
     logic[`num_of_data_Dram-1:0] valid;
+    logic dense; //1 for dense, 0 for sparse
+} Dram_Weight; //interface for compressed data written into OARAM
+
+typedef struct packed {
+    logic[`num_of_data_Dram-1:0][15:0] data;
+    logic[`num_of_data_Dram-1:0][`bits_of_indices-1:0] indices;
+    logic[`num_of_data_Dram-1:0] valid;
+    logic dense;
 } Dram_IARAM; //interface for compressed data written into OARAM
 
 typedef struct packed {
     logic[`num_of_outputs_PPU-1:0][15:0] output_data;
     logic[`num_of_outputs_PPU-1:0][`bits_of_indices-1:0] output_indices;
     logic[`num_of_outputs_PPU-1:0] valid;
+    logic dense;
 } PPU_OARAM; //interface for compressed data written into OARAM
 
 

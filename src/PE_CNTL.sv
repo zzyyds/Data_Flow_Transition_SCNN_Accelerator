@@ -124,17 +124,17 @@ always_ff@(posedge clk)begin
         reg_valid_channel[nx_Conv_Layer]<=#1 Conv_filter_Parameter_TB.valid_channel[nx_Conv_Layer];
         reg_data_flow_channel[nx_Conv_Layer]<=#1 Conv_filter_Parameter_TB.data_flow_channel[nx_Conv_Layer];
         reg_k_Conv_Boundary<=#1 Conv_filter_Parameter_TB.k_Conv_Boundary[nx_Conv_Layer]-1;
-        reg_w_Conv_Boundary<=#1 Conv_filter_Parameter_TB.w_Conv_Boundary[nx_Conv_Layer]-1-`F;//maybe always need compressed version for weight
+        reg_w_Conv_Boundary<=#1 Conv_filter_Parameter_TB.w_Conv_Boundary[nx_Conv_Layer]-1;//maybe always need compressed version for weight
         reg_c_Conv_Boundary<=#1 Conv_filter_Parameter_TB.c_Conv_Boundary[nx_Conv_Layer]-1;
 
         if(nx_Conv_Layer==0)begin
             for(int i=0;i<`max_num_channel;i++)begin
-                reg_a_Conv_Boundary<=#1 num_of_compressed_data[nx_c]-1-`I;
+                reg_a_Conv_Boundary<=#1 num_of_compressed_data[nx_c]-1;
             end
         end
         else begin
             for(int i=0;i<`max_num_channel;i++)begin
-                reg_a_Conv_Boundary<=#1 num_of_compressed_data_PPU[nx_c]-1-`I;
+                reg_a_Conv_Boundary<=#1 num_of_compressed_data_PPU[nx_c]-1;
             end   
         end
         reg_Size_of_W<=#1 Conv_filter_Parameter_TB.Size_of_W[nx_Conv_Layer]-Conv_filter_Parameter_TB.Size_of_R[nx_Conv_Layer]-1;
@@ -211,15 +211,15 @@ always_comb begin
 
         Ex_Conv_Layer:
             if (reg_data_flow_channel[nx_Conv_Layer][nx_c]) begin//sparse data flow
-                Partial_w=Current_w==reg_w_Conv_Boundary[nx_Conv_Layer] || reg_w_Conv_Boundary<`F;
-                Partial_a=Current_a==reg_a_Conv_Boundary[nx_Conv_Layer]&&Partial_w || reg_a_Conv_Boundary<`I;
+                Partial_w=Current_w==(reg_w_Conv_Boundary[nx_Conv_Layer]-`F) || reg_w_Conv_Boundary<`F || (!Flag_remain_w);
+                Partial_a=Current_a==(reg_a_Conv_Boundary[nx_Conv_Layer] -`I)&&Partial_w || reg_a_Conv_Boundary<`I || (!Flag_remain_a);
                 Partial_c=Current_c==reg_c_Conv_Boundary[nx_Conv_Layer]&&Partial_a;
                 Partial_k=Current_k==reg_k_Conv_Boundary[nx_Conv_Layer]&&Partial_c;
 
                 nx_k=Partial_c?Current_k+1'b1:Current_k;
                 nx_c=!Partial_k&&Partial_c?'d0:Partial_a?Current_c+1'b1:Current_c;
-                nx_a=Partial_c || Partial_a?'d0:!Partial_w?Current_a:(Current_a==0)?Current_a+'d3:Flag_remain_a?Current_a+`I:Current_a+remain_a;
-                nx_w=Partial_a || Partial_w?'d0:(Current_w==0)?Current_w+'d3:Flag_remain_w?Current_w+`F:Current_w+remain_w;
+                nx_a=(Partial_c || Partial_a )?'d0:!Partial_w?Current_a:(Current_a==0)?Current_a+'d3:Current_a+`I;
+                nx_w=(Partial_a || Partial_w )?'d0:(Current_w==0)?Current_w+'d3:Current_w+`F;//:Current_w+remain_w
                 if(Partial_c)begin
                     nx_state=Conv_Layer_PPU;
                 end
