@@ -5,7 +5,8 @@ module max_pooling(
   input [$clog2(`max_popling_size_output)-1:0] pooling_size_Boundary,
   input [`pooling_num-1:0][$clog2(`max_popling_size_output)-1:0] stage_pooling_Boundary,
   output logic [$clog2(`Accumulator_buffer_k_offset)-1:0] kc_num,
-  output  PPU_compress_PACKET pooling_compress_out
+  output PPU_compress_PACKET pooling_compress_out_reg,
+  output PPU_finish_en
 );
 parameter  N=3, IDLE='d0, pooling='d1,Complete='d2;
 logic [$clog2(N)-1:0] state, nx_state;
@@ -18,7 +19,7 @@ logic [$clog2(`max_popling_size_output)-1:0] nx_stage_pooling_Boundary_cnt,Curre
 logic [$clog2(`pooling_buffer_entry)-1:0] nx_pooling_entry_cnt,Current_pooling_entry_cnt;// which buffer entry
 logic [$clog2(`Accumulator_buffer_k_offset)-1:0] nx_k,Current_k;// which buffer entry
 logic pooling_finish;
-
+PPU_compress_PACKET pooling_compress_out;
 
 // logic test_1;
 // logic test_2;
@@ -33,6 +34,8 @@ always_ff@(posedge clk)begin
         Current_stage_pooling_Boundary_cnt<=#1 stage_pooling_Boundary[0];
         Current_pooling_entry_cnt<=#1 'd0;
         Current_k<=#1 'd0;
+        pooling_compress_out_reg<=#1 'd0;
+        PPU_finish_en<=#1 'd0;
     end
     else if(pooling_finish) begin
         state<=#1 'd0;
@@ -43,6 +46,8 @@ always_ff@(posedge clk)begin
         Current_stage_pooling_Boundary_cnt<=#1 stage_pooling_Boundary[0];
         Current_pooling_entry_cnt<=#1 'd0;
         Current_k<=#1 'd0;
+        pooling_compress_out_reg<=#1 'd0;
+        PPU_finish_en<=#1 'd1;
     end
     else begin
         state<=#1 nx_state;
@@ -53,6 +58,8 @@ always_ff@(posedge clk)begin
         Current_stage_pooling_Boundary_cnt<=#1 nx_stage_pooling_Boundary_cnt;
         Current_pooling_entry_cnt<=#1 nx_pooling_entry_cnt;
         Current_k<=#1 nx_k;
+        pooling_compress_out_reg<=#1 pooling_compress_out;
+        PPU_finish_en<=#1 'd0;
     end
 end
 

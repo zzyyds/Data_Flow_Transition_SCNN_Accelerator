@@ -137,7 +137,8 @@ max_pooling max_pooling_U0(
   .pooling_size_Boundary(),//testbench
   .stage_pooling_Boundary(),//testbench
   .kc_num(kc_num),
-  .pooling_compress_out(pooling_compress_out)
+  .pooling_compress_out_reg(pooling_compress_out),
+  .PPU_finish_en(PPU_finish_en)
 );
 compress_vector compress_vector_U0(
   .clk(clk),
@@ -145,7 +146,6 @@ compress_vector compress_vector_U0(
   .pooling_compress_out(pooling_compress_out),
   .last_compress(last_compress),
   .k_num(k_num),
-    .PPU_finish_en(PPU_finish_en),
   .PPU_OARAM(PPU_OARAM)
 );
 endmodule
