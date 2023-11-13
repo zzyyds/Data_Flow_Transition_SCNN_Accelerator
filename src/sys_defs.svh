@@ -1,3 +1,6 @@
+`ifndef __SYS_DEFS_SVH__
+`define __SYS_DEFS_SVH__
+
 `define num_of_PE 1
 `define max_num_K 16//k_Conv_Boundary
 `define max_num_filter 384
@@ -163,3 +166,22 @@ typedef struct packed {
     logic[`num_of_PE-1:0][$clog2(`num_of_PE)-1:0] Response_for_PE_num; //may same data give 2 PE, 
 } Response_Stream_Top;//Top use,not PE use
  
+ 
+`define NUM_SRC 8
+`define NUM_DST 4
+
+`define FIFO_DEPTH (`NUM_SRC + 1)
+
+`define DATA_WIDTH 8
+
+//typedef logic signed [`DATA_WIDTH-1:0] DATA_PACKET;
+
+
+typedef struct packed {
+    logic signed [`DATA_WIDTH-1:0]  data;
+    logic                           valid;
+    logic [$clog2(`NUM_SRC)-1:0]    index;  // Destination index
+} DATA_PACKET;
+
+
+`endif
