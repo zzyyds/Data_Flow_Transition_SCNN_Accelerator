@@ -22,8 +22,8 @@ logic [`max_num_K_prime-1:0][$clog2(`max_compressed_data)-1:0] ptr_OARAM, nx_ptr
 logic [$clog2(`max_num_Wt*`max_num_Ht)-1:0] nx_remain_a;
 logic [$clog2(`Kc*`max_num_R*`max_num_S):0] nx_remain_w;
 logic Which_IARAM;// 0 for I_OARAM_S_0, 1 for I_OARAM_S_1
-logic[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_0;//SPARSE
-logic[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_1;//SPARSE
+logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_0;//SPARSE
+logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_1;//SPARSE
 logic[`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_0;//SPARSE
 logic[`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_1;//SPARSE
 
@@ -34,9 +34,9 @@ logic[`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] nx_OARAM_I
 logic [3-1:0][$clog2(`max_compressed_data)-1:0] ptr_IARAM_stream, nx_ptr_IARAM_stream; 
 logic [3-1:0][$clog2(`max_compressed_data)-1:0] ptr_IARAM_stream_indices, nx_ptr_IARAM_stream_indices; 
 //------------------------------Weight--------------------------------------------//
-logic[`max_size_R*`max_size_R-1:0][15:0] Weight_Buffer,nx_Weight_Buffer;//SPARSE
+logic signed [`max_size_R*`max_size_R-1:0][15:0] Weight_Buffer,nx_Weight_Buffer;//SPARSE
 logic[`max_size_R*`max_size_R-1:0][3:0] Weight_Indices,nx_Weight_Indices;//SPARSE
-logic[`max_size_R*`max_size_R-1:0][15:0] Weight_Buffer_Dense,nx_Weight_Buffer_Dense;
+logic signed[`max_size_R*`max_size_R-1:0][15:0] Weight_Buffer_Dense,nx_Weight_Buffer_Dense;
 logic[`max_size_R*`max_size_R-1:0] ptr_weight_stream,nx_ptr_weight_stream;
 logic[`max_size_R*`max_size_R-1:0] ptr_weight_stream_indices,nx_ptr_weight_stream_indices;
 logic[`max_size_R*`max_size_R-1:0] ptr_weight_PPU,nx_ptr_weight_PPU;
