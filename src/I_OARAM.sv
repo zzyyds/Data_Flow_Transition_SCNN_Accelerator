@@ -10,6 +10,10 @@ module I_OARAM(
     input Dram_Weight_indices Dram_Weight_indices_in,
 
     output IARAM_MUL_nx IARAM_MUL_out,
+    output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_0_TB,//SPARSE
+    output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_1_TB,//SPARSE
+    output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_0_TB,//SPARSE
+    output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_1_TB,//SPARSE
     output Weight_MUL_nx Weight_MUL_out
 
 

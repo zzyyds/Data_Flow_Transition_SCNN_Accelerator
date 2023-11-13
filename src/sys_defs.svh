@@ -68,6 +68,7 @@ typedef struct packed {
     
 
 } PPU_compress_PACKET;
+
 typedef struct packed { 
     logic[`pooling_out_size-1:0] valid;
     logic signed [`pooling_out_size-1:0][`size_data-1:0] data;
@@ -189,6 +190,9 @@ typedef struct packed {
     logic[`num_of_Conv_Layer:0][`max_num_channel:0] valid_channel; //valid channel for each layer
     logic[`num_of_Conv_Layer:0][`max_num_channel:0] data_flow_channel;//data flow type for each channel for each layer, 1 for sparse, 0 for dense flow
     logic[`num_of_Conv_Layer:0][$clog2(`max_size_R*``max_size_S)] each_filter_size;
+    logic [$clog2(`max_size_output)-1:0] Conv_size_output_Boundary;
+    logic[$clog2(`max_popling_size_output)-1:0] pooling_size_Boundary;
+    logic[`pooling_num-1:0][$clog2(`max_popling_size_output)-1:0] stage_pooling_Boundary;
 } Conv_filter_Parameter;
 typedef struct packed {
     logic Req_Stream_filter_valid;

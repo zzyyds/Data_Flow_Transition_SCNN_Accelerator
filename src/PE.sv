@@ -2,8 +2,13 @@ module PE(
     input clk,
     input rst,
     input Conv_filter_Parameter Conv_filter_Parameter_TB,
-    input [`max_num_channel-1:0][$clog2(`max_size_output)-1:0]num_of_compressed_data,
+    input [`max_num_channel-1:0][$clog2(`max_size_output)-1:0] num_of_compressed_data,
     input Dram_TB Dram_TB_in,
+
+    output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_0_TB,//SPARSE
+    output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_1_TB,//SPARSE
+    output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_0_TB,//SPARSE
+    output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_1_TB//SPARSE
 
 
 );
@@ -72,6 +77,11 @@ I_OARAM I_OARAM_U0(
     .busy(busy),
 
     .IARAM_MUL_out(IARAM_MUL_out),
+    
+    .I_OARAM_S_0_TB(I_OARAM_S_0_TB),//SPARSE
+    .I_OARAM_S_1_TB(I_OARAM_S_1_TB),//SPARSE
+    .I_OARAM_S_Indices_0_TB(I_OARAM_S_Indices_0_TB),//SPARSE
+    .I_OARAM_S_Indices_1_TB(I_OARAM_S_Indices_1_TB),//SPARSE
     .Weight_MUL_out(Weight_MUL_out)
 );
 
@@ -124,7 +134,7 @@ PE_Accumulator_buffer PE_Accumulator_buffer_U0
 //-------------------Input-------------------------//
     .clk(clk),
     .rst(rst),
-    .Conv_size_output_Boundary(),//testbench
+    .Conv_size_output_Boundary(Conv_filter_Parameter_TB.Conv_size_output_Boundary),//testbench
     .drain_Accumulator_buffer_en(PE_state_out.state=='d3),
     .crossbar_buffer_data_in(crossbar_buffer_data_in),
     .buffer_PPU_data(buffer_PPU_data)
@@ -134,8 +144,8 @@ max_pooling max_pooling_U0(
   .clk(clk),
   .rst(rst),
   .ppu_data_in(buffer_PPU_data),
-  .pooling_size_Boundary(),//testbench
-  .stage_pooling_Boundary(),//testbench
+  .pooling_size_Boundary(Conv_filter_Parameter_TB.pooling_size_Boundary),//testbench
+  .stage_pooling_Boundary(Conv_filter_Parameter_TB.stage_pooling_Boundary),//testbench
   .kc_num(kc_num),
   .pooling_compress_out_reg(pooling_compress_out),
   .PPU_finish_en(PPU_finish_en)
