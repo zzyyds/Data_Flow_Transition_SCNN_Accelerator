@@ -38,6 +38,12 @@
 `define  pooling_out_size  4
 //`define  max_popling_size_output 22
 typedef struct packed {
+    logic [$clog2(`max_size_output)-1:0]num_of_compressed_data_PPU;
+    logic valid;
+    logic[$clog2(`max_num_K)-1:0] which_channel;
+} PPU_RAM_PACKET;
+
+typedef struct packed {
     logic[`NUM_DST-1:0] crossbar_buffer_valid;
     logic signed  [`NUM_DST-1:0][`size_data-1:0] crossbar_buffer_data;
     logic[`NUM_DST-1:0][$clog2(`Accumulator_buffer_entry)-1:0]  x_dir;  //[$clog2(`max_size_output)-1:0]

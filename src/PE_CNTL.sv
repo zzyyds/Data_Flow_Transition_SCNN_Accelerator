@@ -11,6 +11,7 @@ module PE_CNTL
     input Stream_filter_finish,//From Top, Response_Stream_Complete packet
     input Stream_input_finish_PE,
     input [`max_num_channel-1:0][$clog2(`max_size_output)-1:0]num_of_compressed_data_PPU,
+    input busy,
 
 //--------------------output------------------------//
     output Req_Stream Req_Stream_PE,
@@ -182,8 +183,8 @@ always_comb begin
     Partial_H_dense=reg_Partial_H_dense;
     PE_state_out.valid_channel[Current_Conv_Layer]=reg_valid_channel[Current_Conv_Layer];
     PE_state_out.data_flow_channel[Current_Conv_Layer]=reg_data_flow_channel[Current_Conv_Layer];
-
-    case(state)
+    if(!busy)begin
+         case(state)
         IDLE: 
             if(!rst)begin
                 nx_state=Stream_Conv_Layer;
@@ -313,5 +314,7 @@ always_comb begin
 
         
     endcase
+    end
+   
 end//end_comb
 endmodule

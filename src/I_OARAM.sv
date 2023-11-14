@@ -8,18 +8,25 @@ module I_OARAM(
     input Dram_Weight Dram_Weight_in,
     input Dram_IARAM_indices Dram_IARAM_indices_in,
     input Dram_Weight_indices Dram_Weight_indices_in,
+    input busy,
+    input PPU_RAM_PACKET PPU_RAM_PACKET_in,
 
     output IARAM_MUL_nx IARAM_MUL_out,
     output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_0_TB,//SPARSE
     output logic signed[`max_num_K-1:0][`max_compressed_data-1:0][15:0] I_OARAM_S_1_TB,//SPARSE
     output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_0_TB,//SPARSE
     output logic [`max_num_K-1:0][`max_compressed_data-1:0][`bits_of_indices-1:0] I_OARAM_S_Indices_1_TB,//SPARSE
-    output Weight_MUL_nx Weight_MUL_out
+    output Weight_MUL_nx Weight_MUL_out,
+    output logic [`max_num_channel-1:0][$clog2(`max_size_output)-1:0] num_of_compressed_data_PPU_out
 
 
 );
+
+logic [`max_num_channel-1:0][$clog2(`max_size_output)-1:0] nx_num_of_compressed_data_PPU;
+
 IARAM_MUL_nx nx_IARAM_MUL_out_0;
 IARAM_MUL_nx nx_IARAM_MUL_out_1;
+
 //IARAM_MUL_nx IARAM_MUL_out;
 //Weight_MUL_nx nx_Weight_MUL_out;
 logic [`max_num_K_prime-1:0][$clog2(`max_compressed_data)-1:0] ptr_OARAM, nx_ptr_OARAM; 
@@ -50,6 +57,7 @@ logic[$clog2(`max_num_Wt*`max_num_Ht)-1:0]  IARAM_S_index;//a
 assign Which_IARAM=PE_state_out.Current_Conv_Layer[0];//even =0, odd =1;
 assign Weight_Buffer_S_index=(PE_state_out.Current_w==0)?0:PE_state_out.Current_w+1'b1;
 assign IARAM_S_index=(PE_state_out.Current_a==0)?0:PE_state_out.Current_a+1'b1;
+assign  nx_num_of_compressed_data_PPU[PPU_RAM_PACKET_in.which_channel]=PPU_RAM_PACKET_in.valid?PPU_RAM_PACKET_in.which_channel:nx_num_of_compressed_data_PPU[PPU_RAM_PACKET_in.which_channel];
 always_comb begin
     IARAM_MUL_out='d0;
     nx_IARAM_MUL_out_0='d0;
@@ -71,7 +79,8 @@ always_comb begin
     nx_ptr_IARAM_stream_indices=ptr_IARAM_stream_indices;
     nx_ptr_weight_stream_indices=ptr_weight_stream_indices;
     nx_ptr_weight_PPU_indices=ptr_weight_PPU_indices;
-    if(PE_state_out.state=='d1)begin
+    if(!busy)begin
+         if(PE_state_out.state=='d1)begin
         nx_ptr_OARAM='d0;
         nx_ptr_weight_PPU='d0;
 //--------------------------------------------------inputs---------------------------------------------------//
@@ -159,7 +168,6 @@ always_comb begin
             end
             else begin
                 for(int i=0;i<`I;i++)begin
-
                     if(nx_remain_a==0)begin
                         break;
                     end
@@ -249,6 +257,10 @@ always_comb begin
     end
 
 
+    end
+
+
+
 end
 
 always_ff@(posedge clk)begin
@@ -268,8 +280,10 @@ always_ff@(posedge clk)begin
         ptr_IARAM_stream_indices<=#1 'd0;
         ptr_weight_stream_indices<=#1 'd0;
         ptr_weight_PPU_indices<=#1 'd0;
+        num_of_compressed_data_PPU_out<=#1 'd0;
     end
     else begin
+        num_of_compressed_data_PPU_out<=#1 nx_num_of_compressed_data_PPU;
         ptr_IARAM_stream<=#1 nx_ptr_IARAM_stream;
         ptr_OARAM<=#1 nx_ptr_OARAM;
         ptr_weight_stream<=#1 nx_ptr_weight_stream;

@@ -33,6 +33,7 @@ PPU_compress_PACKET pooling_compress_out;
 MUL_XBAR MUL_XBAR_in;
 logic busy;
 crossbar_buffer_in_PACKET crossbar_buffer_data_in;
+logic [`max_num_channel-1:0][$clog2(`max_size_output)-1:0] num_of_compressed_data_PPU_out;
 assign k_num=PE_state_out.Current_k*`Kc +kc_num;
 assign last_compress=k_num==reg_k_num?'d0:'d1;
 assign last_decode_input=prev_channel==PE_state_out.Current_c?'d0:'d1;
@@ -58,6 +59,7 @@ PE_CNTL  PE_CNTL_U0
     .PPU_finish_en(PPU_finish_en),
     .Stream_filter_finish(Stream_filter_finish),
     .Stream_input_finish_PE(Stream_input_finish_PE),
+    .num_of_compressed_data_PPU(num_of_compressed_data_PPU_out),
     .busy(busy),
 
 //--------------------output------------------------//
@@ -75,6 +77,7 @@ I_OARAM I_OARAM_U0(
     .Dram_IARAM_indices_in(Dram_IARAM_indices_out),
     .Dram_Weight_indices_in(Dram_Weight_indices_out),
     .busy(busy),
+    .PPU_RAM_PACKET_in(PPU_RAM_PACKET_in),
 
     .IARAM_MUL_out(IARAM_MUL_out),
     
@@ -82,7 +85,8 @@ I_OARAM I_OARAM_U0(
     .I_OARAM_S_1_TB(I_OARAM_S_1_TB),//SPARSE
     .I_OARAM_S_Indices_0_TB(I_OARAM_S_Indices_0_TB),//SPARSE
     .I_OARAM_S_Indices_1_TB(I_OARAM_S_Indices_1_TB),//SPARSE
-    .Weight_MUL_out(Weight_MUL_out)
+    .Weight_MUL_out(Weight_MUL_out),
+    .num_of_compressed_data_PPU_out(num_of_compressed_data_PPU_out)
 );
 
 MEM DRAM_MEM_Simple(
