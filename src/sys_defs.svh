@@ -232,14 +232,12 @@ typedef struct packed {
 
 `define FIFO_DEPTH (`NUM_SRC + 1)
 
-`define DATA_WIDTH 8
-
-//typedef logic signed [`DATA_WIDTH-1:0] DATA_PACKET;
-
 
 typedef struct packed {
-    logic signed [`DATA_WIDTH-1:0]  data;
-    logic                           valid;
-    logic [$clog2(`NUM_SRC)-1:0]    index;  // Destination index
-} DATA_PACKET;
+    logic signed [15:0] data;
+    logic [$clog2(`max_size_W)-1:0] x;
+    logic [$clog2(`max_size_H)-1:0] y;
+    logic [$clog2(`max_num_K)-1:0] k;
+    logic valid;
+} DATA_PACKET; // Data packet in crossbar
 
