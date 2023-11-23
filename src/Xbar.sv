@@ -64,7 +64,7 @@ module Xbar (
 
         for (int j = 0; j < `NUM_DST; j++) begin
             if (rd_ptr[j] != wt_ptr[j]) begin
-                next_rd_ptr[j] = (rd_ptr[j] + 1) % `FIFO_DEPTH;      // Pop one packet unless empty  
+                next_rd_ptr[j] = (rd_ptr[j] == (`FIFO_DEPTH-1)) ? 0: (rd_ptr[j] + 1);      // Pop one packet unless empty  
             end 
         end
 
@@ -76,7 +76,7 @@ module Xbar (
                 if (in_packet[i].valid) begin
                     idx = in_packet[i].y % `NUM_DST;                        // Select which output fifo to go to
                     next_out_fifo[idx][next_wt_ptr[idx]] = in_packet[i];
-                    next_wt_ptr[idx] = (next_wt_ptr[idx] + 1) % `FIFO_DEPTH;
+                    next_wt_ptr[idx] = (next_wt_ptr[idx] == (`FIFO_DEPTH-1)) ? 0 : (next_wt_ptr[idx] + 1);
                 end
             end
         end
