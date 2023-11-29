@@ -291,6 +291,10 @@ typedef struct packed {
 // dzc//
  
 
+<<<<<<< HEAD:sys_defs.svh
+=======
+`define FIFO_DEPTH (`NUM_SRC + 1)
+>>>>>>> 3d666c9c07f35a7c735461affed1a123ab440d27:src/sys_defs.svh
 
 
 typedef struct packed {
@@ -300,6 +304,7 @@ typedef struct packed {
     logic [$clog2(`max_num_K)-1:0] k;
     logic valid;
 } DATA_PACKET; // Data packet in crossbar
+<<<<<<< HEAD:sys_defs.svh
 
 typedef struct packed {
     logic signed[`I*`F-1:0][15:0] output_data;
@@ -353,4 +358,6 @@ typedef struct packed {
 
 
 
+=======
+>>>>>>> 3d666c9c07f35a7c735461affed1a123ab440d27:src/sys_defs.svh
 
