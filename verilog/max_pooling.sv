@@ -1,3 +1,4 @@
+`timescale 1ns/100ps
 module max_pooling(
   input clk,
   input rst,
@@ -6,7 +7,7 @@ module max_pooling(
   input [`pooling_num-1:0][$clog2(`max_popling_size_output)-1:0] stage_pooling_Boundary,
   output logic [$clog2(`Accumulator_buffer_k_offset)-1:0] kc_num,
   output PPU_compress_PACKET pooling_compress_out_reg,
-  output PPU_finish_en
+  output logic PPU_finish_en
 );
 parameter  N=3, IDLE='d0, pooling='d1,Complete='d2;
 logic [$clog2(N)-1:0] state, nx_state;
@@ -23,7 +24,7 @@ PPU_compress_PACKET pooling_compress_out;
 
 // logic test_1;
 // logic test_2;
-assign kc_num=Current_k;
+assign kc_num=nx_k;
 always_ff@(posedge clk)begin
     if(rst)begin
         state<=#1 'd0;
@@ -95,14 +96,14 @@ always_comb begin
             pooling_finish = 'b0;
         end
         pooling: begin 
-            nx_pooling_cnt = (Current_pooling_cnt == `pooling_num-1)|| (pooling_size_Boundary-1 <=stage_pooling_Boundary[1])? 0:Current_pooling_cnt+'d1;
+            nx_pooling_cnt = (Current_pooling_cnt == `pooling_num-1)? 0:Current_pooling_cnt+'d1;
             
-            nx_entry_cnt = (!(Current_pooling_cnt == `pooling_num-1))&&(pooling_size_Boundary-1 >stage_pooling_Boundary[1])? Current_entry_cnt:((Current_entry_cnt+2)==pooling_size_Boundary-1)&& 
-            ((Current_pooling_cnt == `pooling_num-1)||pooling_size_Boundary-1 <=stage_pooling_Boundary[1])? 'd0 
+            nx_entry_cnt = (!(Current_pooling_cnt == `pooling_num-1))? Current_entry_cnt:((Current_entry_cnt+2)==pooling_size_Boundary-1)&& 
+            (Current_pooling_cnt == `pooling_num-1)? 'd0 
                             :Current_entry_cnt+'d2;
                             
 
-            nx_k = ((Current_entry_cnt+2)==pooling_size_Boundary-1) && ((Current_pooling_cnt == `pooling_num-1)|| (pooling_size_Boundary-1 <=stage_pooling_Boundary[1])) ?
+            nx_k = ((Current_entry_cnt+2)==pooling_size_Boundary-1) && (Current_pooling_cnt == `pooling_num-1)  ?
                       Current_k+'d1: Current_k ;
               for(int j =0;j<`pooling_out_size;j++)begin
                    if((j*2+Current_stage_pooling_Boundary_cnt +2) < pooling_size_Boundary+1    ) begin
@@ -154,12 +155,12 @@ always_comb begin
               end
             nx_stage_pooling_Boundary_cnt = (nx_pooling_cnt <= `pooling_num-1)? stage_pooling_Boundary[nx_pooling_cnt]:stage_pooling_Boundary[0];
 
-            nx_pooling_entry_cnt =(Current_pooling_cnt < `pooling_num-1)&&(pooling_size_Boundary-1 >stage_pooling_Boundary[1]) &&((Current_entry_cnt+2)<pooling_size_Boundary-1) ?
-             Current_pooling_entry_cnt :((Current_pooling_cnt == `pooling_num-1)||(pooling_size_Boundary-1 <=stage_pooling_Boundary[1]))&&((Current_entry_cnt+2)==pooling_size_Boundary-1)?
+            nx_pooling_entry_cnt =(Current_pooling_cnt < `pooling_num-1) &&((Current_entry_cnt+2)<pooling_size_Boundary-1) ?
+             Current_pooling_entry_cnt :(Current_pooling_cnt == `pooling_num-1)&&((Current_entry_cnt+2)==pooling_size_Boundary-1)?
                             Current_pooling_entry_cnt+'d3:Current_pooling_entry_cnt +'d2 ; 
 
                     
-            if((Current_k == (`Accumulator_buffer_k_offset-1)) && ((Current_entry_cnt+2)==pooling_size_Boundary-1) && ((Current_pooling_cnt == `pooling_num-1)|| (pooling_size_Boundary-1 <=stage_pooling_Boundary[1]))) begin
+            if((Current_k == (`Accumulator_buffer_k_offset-1)) && ((Current_entry_cnt+2)==pooling_size_Boundary-1) && ((Current_pooling_cnt == `pooling_num-1)) )begin
                 nx_state=Complete;
             end
             else begin

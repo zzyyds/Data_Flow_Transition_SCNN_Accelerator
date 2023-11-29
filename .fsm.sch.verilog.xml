@@ -1,0 +1,28 @@
+<Command name="schRTLInfo"  delimiter="."  >
+<RTLBlock >
+<RTLInfo   name="state_0"  type="2"  fileName="verilog/PE_Accumulator_buffer.sv"  >
+    <Seg beginLine="26"  endLine="82"  />
+  </RTLInfo>
+<Instance name="TB_PE.PE_TB.PE_Accumulator_buffer_U0"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_1"  type="2"  fileName="verilog/PE_CNTL.sv"  >
+    <Seg beginLine="82"  endLine="292"  />
+  </RTLInfo>
+<Instance name="TB_PE.PE_TB.PE_CNTL_U0"  />
+<Instance name="TB_PE_CNTL.PE_CNTL_U0"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_2"  type="2"  fileName="verilog/MEM.sv"  >
+    <Seg beginLine="46"  endLine="180"  />
+  </RTLInfo>
+<Instance name="TB_PE.PE_TB.DRAM_MEM_Simple"  />
+<Instance name="TB_PE_CNTL.DRAM_MEM_Simple"  />
+</RTLBlock>
+<RTLBlock >
+<RTLInfo   name="state_3"  type="2"  fileName="verilog/max_pooling.sv"  >
+    <Seg beginLine="30"  endLine="164"  />
+  </RTLInfo>
+<Instance name="TB_PE.PE_TB.max_pooling_U0"  />
+</RTLBlock>
+</Command>

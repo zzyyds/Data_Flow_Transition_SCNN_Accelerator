@@ -1,12 +1,12 @@
 `define num_of_PE 1
-`define max_num_K 16//k_Conv_Boundary
-`define max_num_filter 384
-`define max_num_channel 384
+`define max_num_K 4//k_Conv_Boundary
+`define max_num_filter 2
+`define max_num_channel 2
 `define max_num_K_prime `max_num_K/`Kc
 `define max_size_output 55 // one dimension
-
+`define max_stride_conv 4
 `define num_of_Conv_Layer 1 -1
-`define Kc 4
+`define Kc 2
 `define F 4
 `define I 4
 `define max_size_R 11
@@ -32,16 +32,19 @@
 `define  Accumulator_buffer_entry  `max_size_H //
 
 //`define  max_popling_size_in 11
-`define  pooling_num  2
-`define  pooling_size  3
+`define  pooling_num  3
+`define  pooling_size  4
 `define  pooling_buffer_entry  8
 `define  pooling_out_size  4
-//`define  max_popling_size_output 22
-typedef struct packed {
-    logic [$clog2(`max_size_output)-1:0]num_of_compressed_data_PPU;
-    logic valid;
-    logic[$clog2(`max_num_K)-1:0] which_channel;
-} PPU_RAM_PACKET;
+`define NUM_SRC 8
+`define NUM_DST 4
+
+`define FIFO_DEPTH (`NUM_SRC + 1)
+`define  max_popling_size_output 22
+`define max_index 15 //modify for test purpose
+
+
+
 
 typedef struct packed {
     logic[`NUM_DST-1:0] crossbar_buffer_valid;
@@ -84,23 +87,28 @@ typedef struct packed {
 } PPU_dense_PACKET;
 //-----------------------------------------------------------------------------------//
 
-typedef struct packed {
-    logic signed[2:0][`max_compressed_data-1:0][15:0] MEM_activations_compressed;
-    logic signed[2:0][`max_compressed_data-1:0][`bits_of_indices-1:0] MEM_activations_indices;
-    logic signed[`max_num_K-1:0][`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_compressed;
-    logic signed[`max_num_K-1:0][`max_size_R*`max_size_R-1:0][`bits_of_indices-1:0] MEM_weight_indices;
-    //logic signed[`max_num_K-1:0][`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_dense;
-} Dram_TB; //interface for DRAM initializing
+// typedef struct packed {
+//     logic signed[2:0][`max_compressed_data-1:0][15:0] MEM_activations_compressed;
+//     logic signed[2:0][`max_compressed_data-1:0][`bits_of_indices-1:0] MEM_activations_indices;
+//     logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_compressed;
+//     logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_R-1:0][`bits_of_indices-1:0] MEM_weight_indices;
+//     logic signed[2:0][`max_compressed_data-1:0][15:0] MEM_activations_Dense;
+//     logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_S-1:0][15:0]  MEM_weight_dense;
+//     logic [$clog2(`max_num_Ht*`max_num_Wt)-1:0]    size_of_activations_dense;
+//     logic [`num_of_Conv_Layer:0][$clog2(`Kc*`max_size_R*`max_size_R)-1:0]    size_of_Kc_Weights_dense;
+//     //logic signed[`max_num_K-1:0][`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_dense;
+// } Dram_TB; //interface for DRAM initializing
 typedef struct packed {
     logic signed[`num_of_data_Dram-1:0][15:0] data;
 
     logic[`num_of_data_Dram-1:0] valid;
     logic dense; //1 for dense, 0 for sparse
-    //logic[$clog2(3)-1:0] input_channel;
+    logic[$clog2(`Kc)-1:0] filter_channel;
 } Dram_Weight; //interface for compressed data written into OARAM
 typedef struct packed {
     logic[`num_of_data_Dram-1:0][`bits_of_indices-1:0] indices;
     logic[`num_of_data_Dram-1:0] valid;
+    logic[$clog2(`Kc)-1:0] filter_channel;
 } Dram_Weight_indices; //interface for compressed data written into OARAM
 typedef struct packed {
     logic signed[`num_of_data_Dram-1:0][15:0] data;
@@ -117,10 +125,38 @@ typedef struct packed {
 typedef struct packed {
     logic signed[`num_of_outputs_PPU-1:0][15:0] output_data;
     logic[`num_of_outputs_PPU-1:0][`bits_of_indices-1:0] output_indices;
+    //logic [$clog2(`max_size_output)-1:0]num_of_compressed_data_PPU;
     logic[`num_of_outputs_PPU-1:0] valid;
     logic dense;
     logic[$clog2(`max_num_K_prime)-1:0] feature_map_channel;
+    logic compressed_value_count_valid;
+    logic [$clog2(`max_compressed_data)-1 : 0] compressed_value_count;
 } PPU_OARAM; //interface for compressed data written into OARAM
+
+typedef struct packed {
+    logic signed[`num_of_outputs_PPU-1:0][15:0] output_data;
+    logic[`num_of_outputs_PPU-1:0][`bits_of_indices-1:0] output_indices;
+    logic[`num_of_outputs_PPU-1:0] valid;
+    logic compressed_value_count_valid;
+    logic [$clog2(`max_compressed_data)-1 : 0] compressed_value_count;
+} PPU_OUT; //interface for compressed data written into OARAM
+
+
+// typedef struct packed {
+//     logic [$clog2(`max_size_output)-1:0]num_of_compressed_data_PPU;
+//     logic valid;
+//     logic[$clog2(`max_num_K)-1:0] which_channel;
+// } PPU_RAM_PACKET;
+
+typedef struct packed {
+    logic signed[`num_of_outputs_PPU-1:0][15:0] output_data;
+    logic[`num_of_outputs_PPU-1:0][`bits_of_indices-1:0] output_indices;
+    logic[`num_of_outputs_PPU-1:0] valid;
+    logic compressed_value_count_valid;
+    logic [$clog2(`max_compressed_data)-1 : 0] compressed_value_count;
+   // logic dense;
+   // logic[$clog2(`max_num_K_prime)-1:0] feature_map_channel;
+} Compress_OARAM; //interface for compressed data written into OARAM
 
 
 typedef struct packed {
@@ -134,9 +170,9 @@ typedef struct packed {
 
 typedef struct packed {
     logic signed[`I-1:0][15:0] IRAM_data;
-    logic[`I-1:0][$clog2(`max_size_W)-1:0] IRAM_x;
-    logic[`I-1:0][$clog2(`max_size_H)-1:0] IRAM_y;
-    logic[`I-1:0][$clog2(`max_num_K)-1:0] IRAM_k;
+    // logic[`I-1:0][$clog2(`max_size_W)-1:0] IRAM_x;
+    // logic[`I-1:0][$clog2(`max_size_H)-1:0] IRAM_y;
+    // logic[`I-1:0][$clog2(`max_num_K)-1:0] IRAM_k;
     logic[`I-1:0] valid;
 } IARAM_MUL; //for fetching inputs data for multiplier array
 typedef struct packed {
@@ -145,10 +181,31 @@ typedef struct packed {
     logic[`I-1:0] valid;
 } IARAM_MUL_nx; //for fetching inputs data for multiplier array
 typedef struct packed {
+    logic signed[`I*`F-1:0][15:0] IRAM_data;
+    logic[`I*`F-1:0][$clog2(`max_size_W)-1:0]  x;
+    logic[`I*`F-1:0][$clog2(`max_size_H)-1:0] y;
+    logic[`I*`F-1:0] valid;
+} IARAM_MUL_Dense; 
+typedef struct packed {
+    logic signed[`I*`F-1:0][15:0] IRAM_data;
+    logic[`I*`F-1:0] valid;
+} IARAM_MUL_Dense_Cal; 
+typedef struct packed {
+    logic signed[15:0] Weight_data;
+    logic valid;
+} Weight_MUL_Dense_Cal; 
+typedef struct packed {
+    logic signed[15:0] Weight_data;
+    logic[$clog2(`max_size_W)-1:0]  x;
+    logic[$clog2(`max_size_H)-1:0] y;
+    logic[$clog2(`Kc)-1:0] Kc;
+    logic valid;
+} Weight_MUL_Dense; 
+typedef struct packed {
     logic signed[`F-1:0][15:0] Weight_data;
-    logic[`F-1:0][$clog2(`max_size_W)-1:0] IRAM_x;
-    logic[`F-1:0][$clog2(`max_size_H)-1:0] IRAM_y;
-    logic[`F-1:0][$clog2(`max_num_K)-1:0] IRAM_k;
+    // logic[`F-1:0][$clog2(`max_size_W)-1:0] IRAM_x;
+    // logic[`F-1:0][$clog2(`max_size_H)-1:0] IRAM_y;
+    // logic[`F-1:0][$clog2(`max_num_K)-1:0] IRAM_k;
     logic[`F-1:0] valid;
 } Weight_MUL; //for fetching inputs data for multiplier array
 
@@ -160,20 +217,25 @@ typedef struct packed {
 typedef struct packed {
     logic[$clog2(`max_size_R)-1:0]Current_R_dense;
     logic[$clog2(`max_size_S)-1:0]Current_S_dense;
-    logic[$clog2(`max_size_W)-1:0]Current_W_dense;
-    logic[$clog2(`max_size_H)-1:0]Current_H_dense;
-
+    logic[`F*`I-1:0][$clog2(`max_size_W)-1:0]Current_W_dense;
+    logic[`F*`I-1:0][$clog2(`max_size_H)-1:0]Current_H_dense;
+    logic[`F*`I-1:0] dense_WH_pair_valid;
+    logic[$clog2(`Kc)-1:0] Current_Kc;//new added
     logic[$clog2(`max_num_K)-1:0] Current_k;
     logic[$clog2(`max_num_channel)-1:0] Current_c;
+    logic[$clog2(`max_num_K)-1:0] Current_k_dense;
+    logic[$clog2(`max_num_channel)-1:0] Current_c_dense;
+    logic[$clog2(`max_num_channel)-1:0] nx_c;
     logic[$clog2(`max_num_Wt*`max_num_Ht)-1:0] Current_a;
     logic[$clog2(`Kc*`max_num_R*`max_num_S):0] Current_w;
 
-    logic[`num_of_Conv_Layer:0][`max_num_channel-1:0] valid_channel; //valid channel for each layer
+    //logic[`num_of_Conv_Layer:0][`max_num_channel-1:0] valid_channel; //valid channel for each layer
     logic[`num_of_Conv_Layer:0][`max_num_channel-1:0] data_flow_channel;//data flow type for each channel for each layer, 1 for sparse, 0 for dense flow
 
     logic[`num_of_Conv_Layer:0] Current_Conv_Layer;
-    logic Flag_remain_H_dense;
-    logic [$clog2(`max_size_W)-1:0] remain_H_dense;
+    logic[`num_of_Conv_Layer:0] nx_Conv_Layer;
+    // logic Flag_remain_H_dense;
+    // logic [$clog2(`max_size_W)-1:0] remain_H_dense;
     logic [$clog2(`max_num_Wt*`max_num_Ht)-1:0] remain_a;
     logic [$clog2(`Kc*`max_num_R*`max_num_S):0] remain_w;
     logic Flag_remain_a;
@@ -184,7 +246,7 @@ typedef struct packed {
 } State_of_PE; //for fetching inputs data for multiplier array
 typedef struct packed {
     logic[`num_of_Conv_Layer:0][$clog2(`max_num_K_prime):0] k_Conv_Boundary;//calculate in testbench
-    logic[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][$clog2(`Kc*`max_num_R*`max_num_S):0] w_Conv_Boundary;
+    logic[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][$clog2(`Kc*`max_num_R*`max_num_S):0] w_Conv_Boundary;
     logic[`num_of_Conv_Layer:0][$clog2(`max_num_channel):0] c_Conv_Boundary;
    // logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_num_Wt*`max_num_Ht)-1:0] a_Conv_Boundary;
     //logic[$clog2(`num_of_Conv_Layer):0][$clog2(`max_size_output)-1:0] num_of_compressed_weight;
@@ -193,12 +255,13 @@ typedef struct packed {
     logic[`num_of_Conv_Layer:0][$clog2(`max_size_W):0] Size_of_W;
     logic[`num_of_Conv_Layer:0][$clog2(`max_size_H):0] Size_of_H;
 
-    logic[`num_of_Conv_Layer:0][`max_num_channel:0] valid_channel; //valid channel for each layer
+   // logic[`num_of_Conv_Layer:0][`max_num_channel:0] valid_channel; //valid channel for each layer
     logic[`num_of_Conv_Layer:0][`max_num_channel:0] data_flow_channel;//data flow type for each channel for each layer, 1 for sparse, 0 for dense flow
-    logic[`num_of_Conv_Layer:0][$clog2(`max_size_R*``max_size_S)] each_filter_size;
-    logic [$clog2(`max_size_output)-1:0] Conv_size_output_Boundary;
-    logic[$clog2(`max_popling_size_output)-1:0] pooling_size_Boundary;
+    logic[`num_of_Conv_Layer:0][$clog2(`max_size_R*`max_size_S)] each_filter_size;
+    logic [`num_of_Conv_Layer:0][$clog2(`max_size_output)-1:0] Conv_size_output_Boundary;
+    logic[`num_of_Conv_Layer:0][$clog2(`max_popling_size_output)-1:0] pooling_size_Boundary;
     logic[`pooling_num-1:0][$clog2(`max_popling_size_output)-1:0] stage_pooling_Boundary;
+     logic[`num_of_Conv_Layer:0][$clog2(`max_stride_conv):0] stride_conv;
 } Conv_filter_Parameter;
 typedef struct packed {
     logic Req_Stream_filter_valid;
@@ -227,19 +290,67 @@ typedef struct packed {
 } Response_Stream_Top;//Top use,not PE use
 // dzc//
  
-`define NUM_SRC 8
-`define NUM_DST 4
 
-`define FIFO_DEPTH (`NUM_SRC + 1)
-
-`define DATA_WIDTH 8
-
-//typedef logic signed [`DATA_WIDTH-1:0] DATA_PACKET;
 
 
 typedef struct packed {
-    logic signed [`DATA_WIDTH-1:0]  data;
-    logic                           valid;
-    logic [$clog2(`NUM_SRC)-1:0]    index;  // Destination index
-} DATA_PACKET;
+    logic signed [15:0] data;
+    logic [$clog2(`max_size_W)-1:0] x;
+    logic [$clog2(`max_size_H)-1:0] y;
+    logic [$clog2(`max_num_K)-1:0] k;
+    logic valid;
+} DATA_PACKET; // Data packet in crossbar
+
+typedef struct packed {
+    logic signed[`I*`F-1:0][15:0] output_data;
+    logic[`I*`F-1:0] valid;
+} MUL_DATA; 
+typedef struct packed {
+    logic [`I * `F-1 : 0] [$clog2(`max_num_Ht - `max_size_S + 1) : 0] output_row_num;
+    logic [`I * `F-1 : 0] [$clog2(`max_num_Wt - `max_size_R + 1) : 0] output_col_num;
+    logic [`I * `F-1 : 0] [$clog2(`max_num_K)  : 0] k_num;
+    logic [`I * `F-1 : 0] valid;
+    
+    logic signed[`I*`F-1:0][15:0] output_data;
+} MUL_COORD_OUT; //results of multiplier array and corresponding coordinates in activation
+typedef struct packed {
+    logic decode_restart;
+    logic Layer_change_flag;
+    logic [$clog2(`max_size_R*`max_size_S):0] each_filter_size;
+    logic [`I - 1 : 0] [$clog2(`max_index)-1 : 0] input_index_vector;
+    logic [`F - 1 : 0] [$clog2(`max_index)-1 : 0] filter_index_vector;
+    logic [2:0] stride;
+    logic [$clog2(`max_num_Ht) : 0] input_side_length;
+    logic [$clog2(`max_size_R) : 0] filter_side_length;
+
+    Weight_MUL Weight_IN;
+    IARAM_MUL IARAM_IN;
+    IARAM_MUL_Dense IARAM_MUL_Dense_in;
+    Weight_MUL_Dense Weight_MUL_Dense_in;
+    logic sparse;
+} MUL_COORD_IN; 
+
+
+//------------------------------Updated ZZ----------------------------------------//
+`define max_stride_conv 4
+
+typedef struct packed {
+    logic signed[2:0][`max_compressed_data-1:0][15:0] MEM_activations_compressed;
+    logic signed[2:0][`max_compressed_data-1:0][`bits_of_indices-1:0] MEM_activations_indices;
+    logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_compressed;
+    logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_R-1:0][`bits_of_indices-1:0] MEM_weight_indices;
+    logic signed[2:0][`max_compressed_data-1:0][15:0] MEM_activations_Dense;
+    logic signed[`num_of_Conv_Layer:0][`max_num_K_prime-1:0][`max_num_channel-1:0][`Kc*`max_size_R*`max_size_S-1:0][15:0]  MEM_weight_dense;
+    logic [$clog2(`max_num_Ht*`max_num_Wt)-1:0]    size_of_activations_dense;
+    logic [`num_of_Conv_Layer:0][$clog2(`Kc*`max_size_R*`max_size_R)-1:0]    size_of_Kc_Weights_dense;
+    //logic signed[`max_num_K-1:0][`max_size_R*`max_size_R-1:0][15:0]  MEM_weight_dense;
+} Dram_TB; //interface for DRAM initializing
+
+
+
+
+
+
+
+
 
