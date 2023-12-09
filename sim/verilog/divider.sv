@@ -2,7 +2,7 @@
 
 module divider
     #( 
-      parameter N=$clog2(`max_num_Wt*`max_num_Ht)+1,
+      parameter N=$clog2(`max_num_Wt*`max_num_Ht)+2,
       parameter M=$clog2(`max_num_Wt)+1,
       parameter N_ACT = M+N-1
       )
@@ -13,6 +13,7 @@ module divider
       input logic [N-1:0]             dividend,  
       input logic [M-1:0]             divisor,  
       input logic [$clog2(`max_num_K):0] k_in,
+      input logic                     stall,
 
       output logic                    res_rdy ,
       output logic [N_ACT-M:0]        quotient ,  
@@ -32,6 +33,7 @@ module divider
     ( .clk              (clk),
       .rst             (rst),
       .en               (data_rdy),
+      .busy              (stall),
       .dividend         ({{(M){1'b0}}, dividend[N-1]}),
       .divisor          (divisor),     
       .k_in             (k_in),
@@ -59,6 +61,7 @@ module divider
                .quotient_ci      (quotient_t[N_ACT-M-i+1]),
                .dividend_ci      (dividend_t[N_ACT-M-i+1]),
                .k_in             (k_out_t[N_ACT-M-i+1]),
+               .busy              (stall),
 
                .divisor_kp       (divisor_t[N_ACT-M-i]),
                .dividend_kp      (dividend_t[N_ACT-M-i]),

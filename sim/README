@@ -1,0 +1,2 @@
+Course Project, design non-dynamical transitioning between Sparse and Dense Dataflow in channel grannurarity based on SCNN.
+Front-end sim passed for 27 x 27 x 2 activations, 11 x 11 weights with 4 filters (Kc=2) for one convolutional layer, can change parameter and boundary in tb to get any size support. Also, Support maxpooling with 3 x 3, stride 2.

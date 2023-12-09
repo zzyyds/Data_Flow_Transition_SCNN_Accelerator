@@ -1,0 +1,26 @@
+verilog/PE_CNTL.sv:104 YES:SyncFF
+verilog/PE_Accumulator_buffer.sv:28 YES:SyncFF
+verilog/I_OARAM.sv:386 YES:SyncFF
+verilog/divider_cell.sv:26 YES:SyncFF
+verilog/max_pooling.sv:30 YES:SyncFF
+verilog/Xbar.sv:43 YES:SyncFF
+verilog/compression_unit.sv:73 YES:SyncFF
+verilog/compression_unit.sv:86 YES:SyncFF
+verilog/PE.sv:78 YES:SyncFF
+verilog/coordinate_computation.sv:255 YES:SyncFF
+verilog/Multiplier_Array.sv:71 YES:SyncFF
+testbench/MEM.sv:40 YES:SyncFF
+verilog/index_decoder_input.sv:38 YES:SyncFF
+verilog/index_decoder_input.sv:133 YES:SyncFF
+verilog/index_decoder_filter.sv:48 YES:SyncFF
+verilog/index_decoder_filter.sv:179 YES:SyncFF
+==================================================
+Unified Inference Statistics
+Number of always_ff:                   16
+Number of always_latch:                0
+Number of always @*:                   0
+Number of always_comb :                15
+Number of always :                     1
+Number of flip-flop candidates:        16
+Number of synchronous flops inferred:  16
+Number of Asynchronous flops inferred: 0

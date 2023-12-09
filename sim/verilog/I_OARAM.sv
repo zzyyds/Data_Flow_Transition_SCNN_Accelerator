@@ -6,6 +6,7 @@ module I_OARAM(
     input State_of_PE  PE_state_out,
     input [`num_of_Conv_Layer:0][$clog2(`max_size_H):0] Size_of_H,
     input [`num_of_Conv_Layer:0][$clog2(`max_size_R):0] Size_of_S,
+    input [`num_of_Conv_Layer:0][`Kc-1:0][$clog2(`max_size_R*`max_size_S):0] offset_dense_weight,
     input PPU_OARAM PPU_OARAM_in,
     input Dram_IARAM Dram_IARAM_in,
     input Dram_Weight Dram_Weight_in,
@@ -66,10 +67,19 @@ logic[$clog2(`Kc*`max_num_R*`max_num_S):0] Weight_Buffer_S_index;//w
 logic[$clog2(`max_num_Wt*`max_num_Ht)-1:0]  IARAM_A_index;//a
 logic[`I*`F-1:0][$clog2(`max_size_W+`max_size_R)-1:0]  IARAM_idx_Dense_W_R;//W+R
 logic[`I*`F-1:0][$clog2(`max_size_H+`max_size_S)-1:0]  IARAM_idx_Dense_H_S;//H+S
+logic[31:0] weight_dense_idx;
+logic [15:0][31:0] input_dense_idx;
+
 assign Which_IARAM=PE_state_out.Current_Conv_Layer[0];//even =0, odd =1;
 assign Weight_Buffer_S_index=(PE_state_out.Current_w==0)?0:PE_state_out.Current_w+1'b1;
 assign IARAM_A_index=(PE_state_out.Current_a==0)?0:PE_state_out.Current_a+1'b1;
 assign num_of_compressed_data_PPU_out=reg_num_of_compressed_data_PPU;
+assign I_OARAM_S_0_TB=I_OARAM_S_0;
+assign I_OARAM_S_1_TB=I_OARAM_S_1;
+assign I_OARAM_S_Indices_0_TB=I_OARAM_S_Indices_0;
+assign I_OARAM_S_Indices_1_TB=I_OARAM_S_Indices_1;
+
+
 always_comb begin
     nx_num_of_compressed_data_PPU=reg_num_of_compressed_data_PPU;
     IARAM_MUL_out='d0;
@@ -83,11 +93,11 @@ always_comb begin
     nx_remain_a=PE_state_out.remain_a;
     nx_remain_w=PE_state_out.remain_w;
     nx_OARAM_data=Which_IARAM?I_OARAM_S_0:I_OARAM_S_1;
-    nx_OARAM_Indices=Which_IARAM?I_OARAM_S_0:I_OARAM_S_1;
-    nx_IARAM_Indices_stream=Which_IARAM?I_OARAM_S_1:I_OARAM_S_0;
+    nx_OARAM_Indices=Which_IARAM?I_OARAM_S_Indices_0:I_OARAM_S_Indices_1;
+    nx_IARAM_Indices_stream=Which_IARAM?I_OARAM_S_Indices_1:I_OARAM_S_Indices_0;
     nx_IARAM_data_stream=Which_IARAM?I_OARAM_S_1:I_OARAM_S_0;
     nx_ptr_OARAM=ptr_OARAM;
-  
+    
     nx_ptr_IARAM_stream=ptr_IARAM_stream;
     nx_Weight_Buffer=Weight_Buffer;
     nx_Weight_Indices=Weight_Indices;
@@ -100,6 +110,8 @@ always_comb begin
     IARAM_idx_Dense_W_R='d0;
     IARAM_idx_Dense_H_S='d0;
     nx_Kc_Dense=Kc_Dense;
+    weight_dense_idx =0;
+    input_dense_idx='d0;
     nx_Weight_Buffer_Dense=Weight_Buffer_Dense;
     for(int i=0;i<`I*`F;i++)begin
         IARAM_idx_Dense_W_R[i]=PE_state_out.Current_W_dense[i]+PE_state_out.Current_R_dense;
@@ -115,8 +127,10 @@ always_comb begin
 
         //end
         //else begin//Sparse
+        // $display("nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]",nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]);
             for(int i=0;i<`num_of_data_Dram;i++)begin
                 if(Dram_IARAM_in.valid[i])begin
+                    // $display("nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]",nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]);
                     nx_IARAM_data_stream[Dram_IARAM_in.input_channel][nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]]=Dram_IARAM_in.data[i];
                    // nx_IARAM_Indices_stream[Dram_IARAM_in.input_channel][nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]]=Dram_IARAM_in.indices[i];
                     nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]=nx_ptr_IARAM_stream[Dram_IARAM_in.input_channel]+1'b1;
@@ -145,12 +159,12 @@ always_comb begin
            
             for(int i=0;i<`num_of_data_Dram;i++)begin
                 if(Dram_Weight_in.valid[i])begin
-                    nx_Weight_Buffer_Dense[Dram_Weight_in.filter_channel][nx_ptr_weight_stream[Dram_Weight_in.filter_channel]]=Dram_Weight_in.data[i];
-                    nx_ptr_weight_stream[Dram_Weight_in.filter_channel]=nx_ptr_weight_stream[Dram_Weight_in.filter_channel]+1;
+                    nx_Weight_Buffer_Dense[Dram_Weight_in.filter_channel][nx_ptr_weight_stream_Dense[Dram_Weight_in.filter_channel]]=Dram_Weight_in.data[i];
+                    nx_ptr_weight_stream_Dense[Dram_Weight_in.filter_channel]=nx_ptr_weight_stream_Dense[Dram_Weight_in.filter_channel]+1;
                 end
                 else begin
                     nx_Weight_Buffer_Dense=nx_Weight_Buffer_Dense;
-                    nx_ptr_weight_stream=nx_ptr_weight_stream;                
+                    nx_ptr_weight_stream_Dense=nx_ptr_weight_stream_Dense;                
                 end
             end
        end
@@ -170,7 +184,7 @@ always_comb begin
 
         for(int i=0;i<`num_of_data_Dram;i++)begin
             if(Dram_Weight_indices_in.valid[i])begin
-                nx_Weight_Indices[Dram_Weight_indices_in.filter_channel][nx_ptr_weight_stream_indices]=Dram_Weight_indices_in.indices[i];
+                nx_Weight_Indices[Dram_Weight_indices_in.filter_channel][nx_ptr_weight_stream_indices[Dram_Weight_indices_in.filter_channel]]=Dram_Weight_indices_in.indices[i];
                 nx_ptr_weight_stream_indices[Dram_Weight_indices_in.filter_channel]=nx_ptr_weight_stream_indices[Dram_Weight_indices_in.filter_channel]+1'b1;
             end
             else begin
@@ -245,23 +259,38 @@ always_comb begin
                 end
 
             else begin//Dense
+
+            weight_dense_idx =offset_dense_weight[PE_state_out.Current_Conv_Layer][PE_state_out.Current_Kc]+PE_state_out.Current_R_dense*Size_of_S[PE_state_out.Current_Conv_Layer]+PE_state_out.Current_S_dense;
                 for(int i=0;i<`I*`F;i++)begin
-                    IARAM_MUL_Dense_out_0.IRAM_data[i]=I_OARAM_S_0[PE_state_out.Current_c][IARAM_idx_Dense_W_R[i]*Size_of_H[PE_state_out.Current_Conv_Layer]+IARAM_idx_Dense_H_S[i]];
+                    input_dense_idx[i]=IARAM_idx_Dense_W_R[i]*Size_of_H[PE_state_out.Current_Conv_Layer]+IARAM_idx_Dense_H_S[i];
+                    IARAM_MUL_Dense_out_0.IRAM_data[i]=I_OARAM_S_0[PE_state_out.Current_c][input_dense_idx[i]];
                     IARAM_MUL_Dense_out_0.x[i]=IARAM_idx_Dense_W_R[i];
                     IARAM_MUL_Dense_out_0.y[i]=IARAM_idx_Dense_H_S[i];
                     //IARAM_MUL_Dense_out_0.c[i]=;PE_state_out.Current_c;
                     //IARAM_MUL_Dense_out_0.c[i]=PE_state_out.Current_Kc[i];
                     IARAM_MUL_Dense_out_0.valid[i]=PE_state_out.dense_WH_pair_valid[i];
+
+                    // if(IARAM_idx_Dense_W_R[i]=='d2&&IARAM_idx_Dense_H_S[i]=='d10)begin
+                    //     $display("IARAM_idx_Dense_W_R[i]:",IARAM_idx_Dense_W_R[i]);
+                    //     $display("IARAM_idx_Dense_H_S[i]:",IARAM_idx_Dense_H_S[i]);
+                    //     $display("Size_of_H:",Size_of_H[PE_state_out.Current_Conv_Layer]);
+                    //     $display("IARAM_MUL_Dense_out_0.IRAM_data[i]:",IARAM_MUL_Dense_out_0.IRAM_data[i]);
+
+                    //     $display("input_dense_idx[i]:",input_dense_idx[i]);
+
+
+                    // end
                 end
                 for(int i=0;i<`I*`F;i++)begin
-                    IARAM_MUL_Dense_out_1.IRAM_data[i]=I_OARAM_S_1[PE_state_out.Current_c][IARAM_idx_Dense_W_R[i]*Size_of_H[PE_state_out.Current_Conv_Layer]+IARAM_idx_Dense_H_S[i]];
+                    IARAM_MUL_Dense_out_1.IRAM_data[i]=I_OARAM_S_1[PE_state_out.Current_c][input_dense_idx[i]];
                     IARAM_MUL_Dense_out_1.x[i]=IARAM_idx_Dense_W_R[i];
                     IARAM_MUL_Dense_out_1.y[i]=IARAM_idx_Dense_H_S[i];
                     //IARAM_MUL_Dense_out_1.c[i]=;PE_state_out.Current_c;
                     //IARAM_MUL_Dense_out_1.Kc[i]=PE_state_out.Current_Kc[i];
                     IARAM_MUL_Dense_out_1.valid[i]=PE_state_out.dense_WH_pair_valid[i];
                 end
-                Weight_MUL_Dense_out.Weight_data=nx_Weight_Buffer_Dense[PE_state_out.Current_c][PE_state_out.Current_R_dense*Size_of_S[PE_state_out.Current_Conv_Layer]+PE_state_out.Current_S_dense];
+
+                Weight_MUL_Dense_out.Weight_data=nx_Weight_Buffer_Dense[PE_state_out.Current_c][weight_dense_idx];
                 Weight_MUL_Dense_out.valid=1'b1;
                 Weight_MUL_Dense_out.x=PE_state_out.Current_R_dense;
                 Weight_MUL_Dense_out.y=PE_state_out.Current_S_dense;

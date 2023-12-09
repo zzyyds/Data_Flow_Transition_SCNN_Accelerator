@@ -20,11 +20,13 @@ logic [$clog2(`max_popling_size_output)-1:0] nx_stage_pooling_Boundary_cnt,Curre
 logic [$clog2(`pooling_buffer_entry)-1:0] nx_pooling_entry_cnt,Current_pooling_entry_cnt;// which buffer entry
 logic [$clog2(`Accumulator_buffer_k_offset)-1:0] nx_k,Current_k;// which buffer entry
 logic pooling_finish;
+logic [2:0][$clog2(`pooling_buffer_entry):0] tmp_nx_pooling_entry_cnt;
 PPU_compress_PACKET pooling_compress_out;
+logic [1:0]finish_cnt,nx_finish_cnt;
 
 // logic test_1;
 // logic test_2;
-assign kc_num=nx_k;
+assign kc_num=Current_k;
 always_ff@(posedge clk)begin
     if(rst)begin
         state<=#1 'd0;
@@ -37,6 +39,8 @@ always_ff@(posedge clk)begin
         Current_k<=#1 'd0;
         pooling_compress_out_reg<=#1 'd0;
         PPU_finish_en<=#1 'd0;
+	finish_cnt<=#1 'd0;
+
     end
     else if(pooling_finish) begin
         state<=#1 'd0;
@@ -49,6 +53,8 @@ always_ff@(posedge clk)begin
         Current_k<=#1 'd0;
         pooling_compress_out_reg<=#1 'd0;
         PPU_finish_en<=#1 'd1;
+	finish_cnt<=#1 nx_finish_cnt;
+
     end
     else begin
         state<=#1 nx_state;
@@ -61,10 +67,13 @@ always_ff@(posedge clk)begin
         Current_k<=#1 nx_k;
         pooling_compress_out_reg<=#1 pooling_compress_out;
         PPU_finish_en<=#1 'd0;
+	finish_cnt<=#1 'd0;
+
     end
 end
 
 always_comb begin
+    nx_finish_cnt= finish_cnt;
     nx_buffer = Current_buffer;
     nx_entry = Current_entry;
     nx_pooling_cnt=Current_pooling_cnt;
@@ -74,8 +83,8 @@ always_comb begin
     nx_pooling_entry_cnt = Current_pooling_entry_cnt;
     nx_entry_cnt = Current_entry_cnt;
     nx_k = Current_k;
-
-
+    tmp_nx_pooling_entry_cnt=0;
+    pooling_finish = PPU_finish_en;
     for(int i =0;i<`Accumulator_buffer_bank_size;i++)begin
       if(ppu_data_in.valid[i]) begin
       nx_buffer[i][Current_entry].buffer_data = ppu_data_in.data[i];
@@ -96,6 +105,10 @@ always_comb begin
             pooling_finish = 'b0;
         end
         pooling: begin 
+            tmp_nx_pooling_entry_cnt[0]=nx_pooling_entry_cnt;
+            tmp_nx_pooling_entry_cnt[1]=nx_pooling_entry_cnt+1;
+            tmp_nx_pooling_entry_cnt[2]=nx_pooling_entry_cnt+2;
+
             nx_pooling_cnt = (Current_pooling_cnt == `pooling_num-1)? 0:Current_pooling_cnt+'d1;
             
             nx_entry_cnt = (!(Current_pooling_cnt == `pooling_num-1))? Current_entry_cnt:((Current_entry_cnt+2)==pooling_size_Boundary-1)&& 
@@ -109,53 +122,60 @@ always_comb begin
                    if((j*2+Current_stage_pooling_Boundary_cnt +2) < pooling_size_Boundary+1    ) begin
 
 
-                    pooling_compress_out.data[j] =(Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt].buffer_data >   //[0,0], 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt+1].buffer_data ) ?
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt].buffer_data :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt+1].buffer_data;
+                    pooling_compress_out.data[j] =(Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data >   //[0,0], 
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data :
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data;
+                             
 
                     pooling_compress_out.data[j] =(pooling_compress_out.data[j] >  
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt+2].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][nx_pooling_entry_cnt+2].buffer_data;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data;
+                               
 
                     pooling_compress_out.data[j] =(pooling_compress_out.data[j] > 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt].buffer_data;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data;
+                                        
                                                   
                     pooling_compress_out.data[j] =(pooling_compress_out.data[j] > 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt+1].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt+1].buffer_data;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data;
+                                        
 
                     pooling_compress_out.data[j] =(pooling_compress_out.data[j] > 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt+2].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][nx_pooling_entry_cnt+2].buffer_data;  
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+1][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data;  
+                                       
 
                     pooling_compress_out.data[j] =(pooling_compress_out.data[j] > 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt].buffer_data ;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[0][3:0]].buffer_data ;
 
                      pooling_compress_out.data[j] =(pooling_compress_out.data[j] > 
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt+1].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt+1].buffer_data;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[1][3:0]].buffer_data;
+                                  
                                                                        
                      pooling_compress_out.data[j] =(pooling_compress_out.data[j] >
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt+2].buffer_data ) ?
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data ) ?
                                                   pooling_compress_out.data[j] :
-                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][nx_pooling_entry_cnt+2].buffer_data  ;
+                                                  Current_buffer[j*2+nx_stage_pooling_Boundary_cnt+2][tmp_nx_pooling_entry_cnt[2][3:0]].buffer_data  ;
               
                      pooling_compress_out.valid[j]='d1;
+ 
 
                 end
               end
             nx_stage_pooling_Boundary_cnt = (nx_pooling_cnt <= `pooling_num-1)? stage_pooling_Boundary[nx_pooling_cnt]:stage_pooling_Boundary[0];
 
-            nx_pooling_entry_cnt =(Current_pooling_cnt < `pooling_num-1) &&((Current_entry_cnt+2)<pooling_size_Boundary-1) ?
+            nx_pooling_entry_cnt =(Current_pooling_cnt < `pooling_num-1) &&((Current_entry_cnt+2)<pooling_size_Boundary) ?
              Current_pooling_entry_cnt :(Current_pooling_cnt == `pooling_num-1)&&((Current_entry_cnt+2)==pooling_size_Boundary-1)?
                             Current_pooling_entry_cnt+'d3:Current_pooling_entry_cnt +'d2 ; 
 
@@ -169,8 +189,15 @@ always_comb begin
         end
 
         Complete: begin
+            nx_finish_cnt =nx_finish_cnt+'d1;
             pooling_finish = 'b1;
+            if(finish_cnt=='d2)begin
             nx_state=IDLE;
+            end
+            else begin
+            nx_state=Complete;
+	    end   
+           
         end
             default: nx_state=IDLE;    
     endcase

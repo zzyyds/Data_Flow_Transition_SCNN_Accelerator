@@ -1,0 +1,65 @@
+verilog/PE_CNTL.sv:104 YES
+verilog/PE_CNTL.sv:257 NO "a disabled 'break', 'continue', or 'return' statement" (260)
+verilog/PE_CNTL.sv:266 NO "a disabled 'break', 'continue', or 'return' statement" (402)
+verilog/PE_CNTL.sv:268 YES
+verilog/PE_CNTL.sv:275 YES
+verilog/PE_CNTL.sv:323 YES
+verilog/PE_CNTL.sv:376 YES
+verilog/PE_CNTL.sv:404 YES
+verilog/PE_CNTL.sv:434 YES
+verilog/PE_CNTL.sv:462 YES
+verilog/PE_CNTL.sv:483 YES
+verilog/PE_CNTL.sv:555 YES
+verilog/PE_Accumulator_buffer.sv:28 YES
+verilog/PE_Accumulator_buffer.sv:91 YES
+verilog/PE_Accumulator_buffer.sv:96 YES
+verilog/I_OARAM.sv:120 NO "a disabled 'break', 'continue', or 'return' statement" (226)
+verilog/I_OARAM.sv:132 YES
+verilog/I_OARAM.sv:146 YES
+verilog/I_OARAM.sv:158 YES
+verilog/I_OARAM.sv:186 YES
+verilog/I_OARAM.sv:242 NO "a disabled 'break', 'continue', or 'return' statement" (226)
+verilog/I_OARAM.sv:305 YES
+verilog/I_OARAM.sv:386 YES
+verilog/divider_cell.sv:26 NO "a set of assignments with different delays" (48)
+verilog/max_pooling.sv:30 YES
+verilog/max_pooling.sv:89 YES
+verilog/max_pooling.sv:97 YES
+verilog/Xbar.sv:43 YES
+verilog/Xbar.sv:78 YES
+verilog/Xbar.sv:100 YES
+verilog/compression_unit.sv:54 YES
+verilog/compression_unit.sv:73 YES
+verilog/compression_unit.sv:86 YES
+verilog/PE.sv:78 YES
+verilog/PE.sv:161 YES
+verilog/PE.sv:264 YES
+verilog/coordinate_computation.sv:168 YES
+verilog/coordinate_computation.sv:255 YES
+verilog/Multiplier_Array.sv:33 YES
+verilog/Multiplier_Array.sv:71 YES
+testbench/MEM.sv:40 YES
+testbench/MEM.sv:100 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:103 YES
+testbench/MEM.sv:146 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:148 YES
+testbench/MEM.sv:182 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:184 YES
+testbench/MEM.sv:219 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:234 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:237 YES
+testbench/MEM.sv:259 NO "a disabled 'break', 'continue', or 'return' statement" (133)
+testbench/MEM.sv:261 YES
+verilog/index_decoder_input.sv:38 YES
+verilog/index_decoder_input.sv:125 YES
+verilog/index_decoder_input.sv:133 YES
+verilog/index_decoder_filter.sv:48 NO "a set of assignments with different delays" (61)
+verilog/index_decoder_filter.sv:87 YES
+verilog/index_decoder_filter.sv:102 YES
+verilog/index_decoder_filter.sv:170 YES
+verilog/index_decoder_filter.sv:179 YES
+==================================================
+X P R O P   S T A T I S T I C S
+instrumentable assignments:    844
+instrumented assignments:      664
+instrumentation success rate:  78%

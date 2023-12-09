@@ -31,9 +31,9 @@ logic [$clog2(N)-1:0] state,nx_state;
 logic[$clog2(`max_num_Wt*`max_num_Ht)-1:0] nx_remain_activations,nx_remain_activations_dense;
 logic [$clog2(`Kc*`max_num_R*`max_num_S)-1:0] nx_remain_weight,nx_remain_weight_dense;
 logic[$clog2(3)-1:0] current_channel_activations,nx_current_channel_activations;
-logic[$clog2(`Kc)-1:0] current_channel_weights,nx_current_channel_weights;
+logic[$clog2(`Kc):0] current_channel_weights,nx_current_channel_weights;
 logic[$clog2(`max_num_Wt*`max_num_Ht)-1:0] current_activations,nx_current_activations,current_activations_dense,nx_current_activations_dense;
-logic[$clog2(`max_size_R*`max_size_S)-1:0]current_weight_ptr,nx_current_weight_ptr,current_weight_ptr_dense,nx_current_weight_ptr_dense;
+logic[$clog2(`Kc*`max_size_R*`max_size_S)-1:0]current_weight_ptr,nx_current_weight_ptr,current_weight_ptr_dense,nx_current_weight_ptr_dense;
 
 
 
@@ -91,7 +91,7 @@ always_comb begin
     Stream_filter_finish='d0;
     nx_current_weight_ptr=current_weight_ptr;
     nx_remain_activations=num_of_compressed_data[current_channel_activations]-current_activations;
-    nx_remain_activations_dense=Dram_TB_in.size_of_activations_dense[current_channel_activations]-current_activations_dense;
+    nx_remain_activations_dense=Dram_TB_in.size_of_activations_dense-current_activations_dense;
     nx_remain_weight=Conv_filter_Parameter_TB.w_Conv_Boundary[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k][current_channel_weights]-current_weight_ptr;
     nx_remain_weight_dense=Dram_TB_in.size_of_Kc_Weights_dense[PE_state_in.Current_Conv_Layer]-current_weight_ptr_dense;
     nx_current_weight_ptr_dense=current_weight_ptr_dense;
@@ -101,7 +101,13 @@ always_comb begin
         IDLE:
             begin
                 if(PE_state_in.Current_k==0 &&PE_state_in.Current_Conv_Layer==0&&Req_Stream_PE.Req_Stream_input_valid)begin
-                    nx_state=Stream_activations_compressed;
+                    if(Conv_filter_Parameter_TB.data_flow_channel[PE_state_in.Current_Conv_Layer][nx_current_channel_activations])begin
+                        nx_state=Stream_activations_compressed;
+                    end
+                    else begin
+                        nx_state=Stream_activations_dense;
+                    end
+                    
                 end
                 else if(Req_Stream_PE.Req_Stream_filter_valid)begin
                     nx_state=state_MEM_weight_compressed;
@@ -133,7 +139,7 @@ always_comb begin
             begin
                 for(int i=0;i<`num_of_data_Dram;i++)begin
                         nx_Dram_IARAM_indices_out.valid[i]=1'b1;
-                        nx_Dram_IARAM_indices_out.indices[i]=MEM_activations_compressed[nx_current_channel_activations][nx_current_activations];
+                        nx_Dram_IARAM_indices_out.indices[i]=MEM_activations_indices[nx_current_channel_activations][nx_current_activations];
                         nx_Dram_IARAM_indices_out.input_channel=nx_current_channel_activations;
                         nx_current_activations=nx_current_activations+1'b1;
                         nx_remain_activations=nx_remain_activations-1'b1;
@@ -141,8 +147,15 @@ always_comb begin
                             nx_current_activations='d0;
                             if(current_channel_activations==Conv_filter_Parameter_TB.c_Conv_Boundary[PE_state_in.Current_Conv_Layer]-1'b1)begin
                                 nx_current_channel_activations='d0;
-                                nx_state= state_MEM_weight_compressed;
+                                
                                 Stream_input_finish_PE=1'b1;
+                                // if(Conv_filter_Parameter_TB.data_flow_channel[PE_state_in.Current_Conv_Layer][nx_current_channel_activations])begin
+                                //     nx_state= state_MEM_weight_compressed;
+                                // end
+                                // else begin
+                                //     nx_state= state_MEM_weight_dense;
+                                // end
+                                nx_state= state_MEM_weight_compressed;
                             end
                             else begin
                                 nx_current_channel_activations=nx_current_channel_activations+1'b1;
@@ -165,13 +178,20 @@ always_comb begin
                         nx_Dram_IARAM_out.data[i]=MEM_activations_Dense[nx_current_channel_activations][nx_current_activations_dense];
                         nx_Dram_IARAM_out.input_channel=nx_current_channel_activations;
                         nx_current_activations_dense=nx_current_activations_dense+1'b1;
-                        nx_remain_activations=nx_remain_activations-1'b1;
-                        if(nx_remain_activations==0)begin
+                        nx_remain_activations_dense=nx_remain_activations_dense-1'b1;
+                        if(nx_remain_activations_dense==0)begin
                             nx_current_activations_dense='d0;
                             if(current_channel_activations==Conv_filter_Parameter_TB.c_Conv_Boundary[PE_state_in.Current_Conv_Layer]-1'b1)begin
                                 nx_current_channel_activations='d0;
-                                nx_state= state_MEM_weight_compressed;
+                                
                                 Stream_input_finish_PE=1'b1;
+                                // if(Conv_filter_Parameter_TB.data_flow_channel[PE_state_in.Current_Conv_Layer][nx_current_channel_activations])begin
+                                //     nx_state= state_MEM_weight_compressed;
+                                // end
+                                // else begin
+                                //     nx_state= state_MEM_weight_dense;
+                                // end
+                                 nx_state= state_MEM_weight_compressed;
                             end
                             else begin
                                 nx_current_channel_activations=nx_current_channel_activations+1'b1;
@@ -192,7 +212,7 @@ always_comb begin
             begin
                 for(int i=0;i<`num_of_data_Dram;i++)begin
                     nx_Dram_Weight_out.valid[i]=1'b1;
-                    nx_Dram_Weight_out.data[i]=MEM_weight_compressed[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k][nx_current_channel_weights][nx_current_weight_ptr];
+                    nx_Dram_Weight_out.data[i]=MEM_weight_compressed[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k+PE_state_in.state=='d3][nx_current_channel_weights][nx_current_weight_ptr];
                     nx_Dram_Weight_out.filter_channel=nx_current_channel_weights;
                     nx_current_weight_ptr=nx_current_weight_ptr+1'b1;
                     nx_remain_weight=nx_remain_weight-1'b1;
@@ -207,7 +227,7 @@ always_comb begin
             begin
                 for(int i=0;i<`num_of_data_Dram;i++)begin
                     nx_Dram_Weight_indices_out.valid[i]=1'b1;
-                    nx_Dram_Weight_indices_out.indices[i]=MEM_weight_indices[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k][nx_current_channel_weights][nx_current_weight_ptr];
+                    nx_Dram_Weight_indices_out.indices[i]=MEM_weight_indices[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k+PE_state_in.state=='d3][nx_current_channel_weights][nx_current_weight_ptr];
                     nx_Dram_Weight_indices_out.filter_channel=nx_current_channel_weights;
                     nx_current_weight_ptr=nx_current_weight_ptr+1'b1;
                     nx_remain_weight=nx_remain_weight-1'b1;
@@ -232,7 +252,7 @@ always_comb begin
                  nx_Dram_Weight_out.dense=1'b1;
                  for(int i=0;i<`num_of_data_Dram;i++)begin
                     nx_Dram_Weight_out.valid[i]=1'b1;
-                    nx_Dram_Weight_out.data[i]=MEM_weight_dense[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k][nx_current_weight_ptr_dense];
+                    nx_Dram_Weight_out.data[i]=MEM_weight_dense[PE_state_in.Current_Conv_Layer][PE_state_in.Current_k+PE_state_in.state=='d3][nx_current_channel_weights][nx_current_weight_ptr_dense];
                     nx_Dram_Weight_out.filter_channel=nx_current_channel_weights;
                     nx_current_weight_ptr_dense=nx_current_weight_ptr_dense+1'b1;
                     nx_remain_weight_dense=nx_remain_weight_dense-1'b1;

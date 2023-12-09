@@ -5,8 +5,9 @@ module compression_unit (
   input logic rst,
   input PPU_compress_PACKET max_pooling_to_compress,
   input logic compress_restart,
-
-  output PPU_OUT compressed_out
+ input PPU_finish_en,
+  output Compress_OARAM compressed_out,
+  output finish_en
 
 );
 
@@ -30,7 +31,7 @@ module compression_unit (
   assign compressed_out.output_data = data_vector;
   assign compressed_out.output_indices = index_vector;
   assign compressed_out.valid = valid_out;
-
+  assign finish_en =PPU_finish_en;
 // //---------------------------------------------------//
 //   assign compressed_out.dense =  0;                  //
 //   assign compressed_out.feature_map_channel = 0;     //    need to modify
@@ -71,32 +72,32 @@ module compression_unit (
 
   always_ff @(posedge clk) begin
     if (rst) begin
-        prev_cycle_zero_count <= 0;
+        prev_cycle_zero_count <=#1 0;
     end
 
     else begin
       if (compress_restart)
-        prev_cycle_zero_count <= 0;
+        prev_cycle_zero_count <=#1 0;
       else
-        prev_cycle_zero_count <= zero_count;
+        prev_cycle_zero_count <=#1 zero_count;
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      compressed_out.compressed_value_count <= 0;
-      compress_restart_d1 <= 0;
+      compressed_out.compressed_value_count <=#1 0;
+      compress_restart_d1 <=#1 0;
     end
 
     else begin
-      compress_restart_d1 <= compress_restart;
+      compress_restart_d1 <= #1 compress_restart;
       if (compress_restart_d1)
-          compressed_out.compressed_value_count <= current_cycle_valid_count;
+          compressed_out.compressed_value_count <=#1 current_cycle_valid_count;
       else
-          compressed_out.compressed_value_count <= compressed_out.compressed_value_count + current_cycle_valid_count;
+          compressed_out.compressed_value_count <=#1 compressed_out.compressed_value_count + current_cycle_valid_count;
     end
   end
 
-  assign compressed_out.compressed_value_count_valid = compress_restart_d1;
+  assign compressed_out.compressed_value_count_valid = compress_restart;
 
 endmodule
